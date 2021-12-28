@@ -32,6 +32,7 @@ s.waitForBoot({
 		self.midi_device_name = midi_device_name;
 		self.midi_port_name = midi_port_name;
 		CCResponder.removeAll;
+		BendResponder.removeAll;
 		if (MIDIClient.initialized.not) { MIDIClient.init; };
 		self.midi_device_out = MIDIOut.newByName(self.midi_device_name, self.midi_port_name);
 		self.midi_device_out.latency_(midi_out_latency);
@@ -516,10 +517,10 @@ s.waitForBoot({
 	slider2 = controlFactory.make_midi_slider("SLIDER 2", "slider");
 	slider2.receive_handler = {
 		| self, src, chan, num, val |
-		src.debug(self.uniquename + "src haha gefopt");
-		chan.debug(self.uniquename + "chan haha gefopt");
-		num.debug(self.uniquename + "num haha gefopt");
-		val.debug(self.uniquename + "val haha gefopt");
+		src.debug(self.uniquename + "src ");
+		chan.debug(self.uniquename + "chan");
+		num.debug(self.uniquename + "num ");
+		val.debug(self.uniquename + "val ");
 	};
 
 	~msgDispatcher.connect("Rev2", "Rev2 MIDI 1");
@@ -531,6 +532,7 @@ s.waitForBoot({
 
 	CmdPeriod.doOnce({
 		CCResponder.removeAll;
+		BendResponder.removeAll;
 		Window.closeAll
 	});
 });
