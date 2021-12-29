@@ -22,6 +22,7 @@ s.waitForBoot({
 		};
 	);
 
+	var numericalControl = objectPrototype.deepCopy();
 	var controlFactory = objectPrototype.deepCopy();
 
 	var slider1, slider2, knob1;
@@ -233,13 +234,14 @@ s.waitForBoot({
 		});
 	});
 
-	controlFactory.safeReg(\make_midi_slider, {
+
+	numericalControl.safeReg(\init, {
 		| self, unique_name, gui_name |
-		var midiSlider = objectPrototype.deepCopy();
-		// learnable midi slider
-		midiSlider.safeReg(\debugmode, false);
-		midiSlider.safeReg(\uniquename, unique_name);
-		midiSlider.safeReg(\send, {
+		var numericalControl = objectPrototype.deepCopy();
+		// learnable midi control
+		self.safeReg(\debugmode, false);
+		self.safeReg(\uniquename, unique_name);
+		self.safeReg(\send, {
 			| self, val |
 			if (self.obsmidiout.isNil) {
 				if (self.debugmode) {
@@ -281,7 +283,7 @@ s.waitForBoot({
 
 		// some convenience methods to bind control to certain events without learning
 
-		midiSlider.safeReg(\prebind_cc, {
+		self.safeReg(\prebind_cc, {
 			| self, chan, ccnum, minval=0, maxval=127, src=nil |
 			self.obstype = \cc;
 			self.obssrc = src;
@@ -292,7 +294,7 @@ s.waitForBoot({
 			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
 		});
 
-		midiSlider.safeReg(\prebind_nrpn, {
+		self.safeReg(\prebind_nrpn, {
 			| self, chan, nrpnnum, minval=0, maxval=127, src=nil |
 			self.obstype = \nrpn;
 			self.obssrc = src;
@@ -303,7 +305,7 @@ s.waitForBoot({
 			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
 		});
 
-		midiSlider.safeReg(\prebind_bend, {
+		self.safeReg(\prebind_bend, {
 			| self, chan, minval=0, maxval=16834, src=nil |
 			self.obstype = \bend;
 			self.obssrc = src;
@@ -313,8 +315,13 @@ s.waitForBoot({
 			self.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:8192, units:"");
 			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
 		});
+	});
 
+	controlFactory.safeReg(\make_midi_slider, {
 		// turn control into a gui thing
+		|self, unique_name, gui_name |
+		var midiSlider = numericalControl.deepCopy();
+		midiSlider.init(unique_name, gui_name);
 
 		midiSlider.safeReg(\orientation, \vertical);
 		midiSlider.safeReg(\muted, false);
@@ -414,84 +421,9 @@ s.waitForBoot({
 
 	controlFactory.safeReg(\make_midi_knob, {
 		| self, unique_name, gui_name |
-		var midiKnob = objectPrototype.deepCopy();
-		// learnable midi slider
-		midiKnob.safeReg(\debugmode, false);
-		midiKnob.safeReg(\uniquename, unique_name);
-		midiKnob.safeReg(\send, {
-			| self, val |
-			if (self.obsmidiout.isNil) {
-				if (self.debugmode) {
-					"Warning: " ++ self.uniquename ++ " cannot send midi info out since its obsmidiout member is not initialized!".postln;
-				};
-			} /*else*/ {
-				var chan = self.obschan ?? {0};
-				if (self.obsctrl.notNil) {
-					if (self.obstype == \cc) {
-						self.obsmidiout.control(self.obschan, self.obsctrl, val);
-					} /*else*/ {
-						if (self.obstype == \nrpn) {
-							var cCC_MSB = 99;
-							var cCC_LSB = 98;
-							var cDATA_MSB = 6;
-							var cDATA_LSB = 38;
-							var number_msb = self.obsctrl >> 7;
-							var number_lsb = self.obsctrl & 127;
-							var intval = val.asInteger;
-							var value_msb = intval >> 7;
-							var value_lsb = intval & 127;
-							self.obsmidiout.control(self.obschan, cCC_MSB, number_msb);
-							self.obsmidiout.control(self.obschan, cCC_LSB, number_lsb);
-							self.obsmidiout.control(self.obschan, cDATA_MSB, value_msb);
-							self.obsmidiout.control(self.obschan, cDATA_LSB, value_lsb);
-						} {
-							if (self.obstype == \bend) {
-								self.obsmidiout.bend(self.obschan, val.asInteger);
-							};
-						};
-					};
-				} /* else */ {
-					if (self.debugmode) {
-						"Warning: " ++ self.uniquename ++ "cannot sent control change since its obsctrl member is not initialized!".postln;
-					};
-				};
-			};
-		});
 
-		// some convenience methods to bind control to certain events without learning
-
-		midiKnob.safeReg(\prebind_cc, {
-			| self, chan, ccnum, minval=0, maxval=127, src=nil |
-			self.obstype = \cc;
-			self.obssrc = src;
-			self.obsctrl = ccnum;
-			self.obschan = chan;
-			self.obsmidiout = self.midi_device_out;
-			self.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
-			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
-		});
-
-		midiKnob.safeReg(\prebind_nrpn, {
-			| self, chan, nrpnnum, minval=0, maxval=127, src=nil |
-			self.obstype = \nrpn;
-			self.obssrc = src;
-			self.obsctrl = nrpnnum;
-			self.obschan = chan;
-			self.obsmidiout = self.midi_device_out;
-			self.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
-			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
-		});
-
-		midiKnob.safeReg(\prebind_bend, {
-			| self, chan, minval=0, maxval=16834, src=nil |
-			self.obstype = \bend;
-			self.obssrc = src;
-			self.obsctrl = "BEND";
-			self.obschan = chan;
-			self.obsmidiout = self.midi_device_out;
-			self.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:8192, units:"");
-			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
-		});
+		var midiKnob = numericalControl.deepCopy();
+		midiKnob.init(unique_name, gui_name);
 
 		// turn control into a gui thing
 
@@ -608,7 +540,7 @@ s.waitForBoot({
 	// make a window
 	w = Window("Midi fader", Rect(100, 500, 400, 400));
 	w.layout_(HLayout(
-		slider1.asLayout(false, true, false, "L", "M"),
+		slider1[\asLayout].(slider1, show_label:false, show_mute_button:false, learn_label:"L", mute_label:"M"),
 		slider2.asLayout,
 		knob1.asLayout,
 		nil));
