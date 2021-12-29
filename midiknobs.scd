@@ -27,9 +27,9 @@ s.waitForBoot({
 
 	var slider1, slider2, knob1;
 
-	~msgDispatcher = objectPrototype.deepCopy();
-	~msgDispatcher.safeReg(\debugmode, false);
-	~msgDispatcher.safeReg(\connect, {
+	var msgDispatcher = objectPrototype.deepCopy();
+	msgDispatcher.safeReg(\debugmode, false);
+	msgDispatcher.safeReg(\connect, {
 		| self, midi_device_name, midi_port_name, midi_out_latency=0 |
 		self.midi_device_name = midi_device_name;
 		self.midi_port_name = midi_port_name;
@@ -44,12 +44,12 @@ s.waitForBoot({
 		self.initBendResponder;
 	});
 
-	~msgDispatcher.safeReg(\observers, objectPrototype.deepCopy());
-	~msgDispatcher.observers[\data] = ();
-	~msgDispatcher.safeReg(\learning_observers, objectPrototype.deepCopy());
-	~msgDispatcher.learning_observers[\data] = ();
+	msgDispatcher.safeReg(\observers, objectPrototype.deepCopy());
+	msgDispatcher.observers[\data] = ();
+	msgDispatcher.safeReg(\learning_observers, objectPrototype.deepCopy());
+	msgDispatcher.learning_observers[\data] = ();
 
-	~msgDispatcher.safeReg(\learn, {
+	msgDispatcher.safeReg(\learn, {
 		| self, what |
 		self.learning_observers[\data][what.uniquename.asSymbol] = what;
 		what.obsspec = nil; // force recalibration
@@ -58,7 +58,7 @@ s.waitForBoot({
 		}
 	});
 
-	~msgDispatcher.safeReg(\stopLearning, {
+	msgDispatcher.safeReg(\stopLearning, {
 		|self|
 		// transfer learned observer to observers
 		self.learning_observers[\data].keysValuesDo({
@@ -69,7 +69,7 @@ s.waitForBoot({
 		self.learning_observers[\data] = ();
 	});
 
-	~msgDispatcher.safeReg(\notifyObservers, {
+	msgDispatcher.safeReg(\notifyObservers, {
 		| self, obstype, observers, src, chan, incomingNum, incomingVal |
 
 		observers.do {
@@ -107,7 +107,7 @@ s.waitForBoot({
 		};
 	});
 
-	~msgDispatcher.safeReg(\updateLearningObservers, {
+	msgDispatcher.safeReg(\updateLearningObservers, {
 		| self, obstype, learning_observers, src, chan, incomingNum, incomingVal, default_max_value |
 		// if there are any controllers waiting to learn this CC, now is the time
 		learning_observers.do {
@@ -149,7 +149,7 @@ s.waitForBoot({
 		});
 	});
 
-	~msgDispatcher.safeReg(\initCcResponder, {
+	msgDispatcher.safeReg(\initCcResponder, {
 		| self, ignore_nrpn=true |
 		if (self.debugmode) {
 			"initializing CC responder".postln;
@@ -167,7 +167,7 @@ s.waitForBoot({
 		});
 	});
 
-	~msgDispatcher.safeReg(\initNrpnResponder, {
+	msgDispatcher.safeReg(\initNrpnResponder, {
 		| self |
 
 		var list = #[99, 98, 6, 38];
@@ -218,7 +218,7 @@ s.waitForBoot({
 		}, num: list);
 	});
 
-	~msgDispatcher.safeReg(\initBendResponder, {
+	msgDispatcher.safeReg(\initBendResponder, {
 		| self |
 
 		if (self.debugmode) {
@@ -291,7 +291,7 @@ s.waitForBoot({
 			self.obschan = chan;
 			self.obsmidiout = self.midi_device_out;
 			self.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
-			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
+			msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
 		});
 
 		self.safeReg(\prebind_nrpn, {
@@ -302,7 +302,7 @@ s.waitForBoot({
 			self.obschan = chan;
 			self.obsmidiout = self.midi_device_out;
 			self.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
-			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
+			msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
 		});
 
 		self.safeReg(\prebind_bend, {
@@ -313,7 +313,7 @@ s.waitForBoot({
 			self.obschan = chan;
 			self.obsmidiout = self.midi_device_out;
 			self.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:8192, units:"");
-			~msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
+			msgDispatcher.observers[\data][self.uniquename.asSymbol] = self;
 		});
 	});
 
@@ -373,10 +373,10 @@ s.waitForBoot({
 				|view|
 				if (view.value == 1) {
 					// switching to learning
-					~msgDispatcher.learn(self);
+					msgDispatcher.learn(self);
 				} /* else */ {
 					if (view.value == 0) {
-						~msgDispatcher.stopLearning();
+						msgDispatcher.stopLearning();
 					};
 				};
 			});
@@ -475,10 +475,10 @@ s.waitForBoot({
 				|view|
 				if (view.value == 1) {
 					// switching to learning
-					~msgDispatcher.learn(self);
+					msgDispatcher.learn(self);
 				} /* else */ {
 					if (view.value == 0) {
-						~msgDispatcher.stopLearning();
+						msgDispatcher.stopLearning();
 					};
 				};
 			});
@@ -535,7 +535,9 @@ s.waitForBoot({
 
 	knob1 = controlFactory.make_midi_knob("KNOB 1", "knob");
 
-	~msgDispatcher.connect("Rev2", "Rev2 MIDI 1");
+	"Getting things ready".postln;
+	msgDispatcher.connect("Rev2", "Rev2 MIDI 1");
+	"Let's go...".postln;
 
 	// make a window
 	w = Window("Midi fader", Rect(100, 500, 400, 400));
