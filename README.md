@@ -1,5 +1,5 @@
 # sc-midi-controls
-supercollider code to talk to easily add self-learning bi-directional MIDI sliders and knobs
+supercollider code to easily add self-learning bi-directional MIDI sliders and knobs
 
 ```
 (
