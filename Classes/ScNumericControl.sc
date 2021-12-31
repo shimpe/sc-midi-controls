@@ -112,13 +112,20 @@ ScNumericControl {
 
 	registerReceiveHandler {
 		| handler |
+		// handler must be a function that has 6 arguments
+		// dispatcher (filled in by the framework)
+		// control (the knob or slider that received the update)
+		// src (the midi source)
+		// chan (the midi channel)
+		// num (the controller number (for pitch bending this is a string "BEND")
+		// val (the controller value)
 		this.receive_handler = handler;
 	}
 
 	receivePublic {
-		| self, src, chan, num, val |
+		| dispatcher, control, src, chan, num, val |
 		if (this.receive_handler.notNil) {
-			^this.receive_handler(src, chan, num, val);
+			^this.receive_handler.(dispatcher, control, src, chan, num, val);
 		}
 	}
 
