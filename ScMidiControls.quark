@@ -1,0 +1,10 @@
+(
+  name: "ScMidiControls",
+  summary: "Quark to create self-learning bi-directional MIDI controls",
+  version: "0.0.1",
+  schelp: "ScMidiControls.schelp",
+  license: "GPL",
+  dependencies: [],
+  copyright: "Stefaan Himpe, december 2021"
+)
+
