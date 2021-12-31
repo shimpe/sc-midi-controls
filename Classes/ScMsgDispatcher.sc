@@ -193,4 +193,9 @@ ScMsgDispatcher {
 		});
 	}
 
+	cleanUp {
+		this.cc_responder.remove;
+		this.nrpn_responder.remove;
+		this.bend_responder.remove;
+	}
 }

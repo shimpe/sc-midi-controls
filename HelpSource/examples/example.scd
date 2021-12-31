@@ -2,11 +2,11 @@
 var slider1, slider2, knob1;
 var msgDispatcher;
 
-"Getting things ready".postln;
+// create a midi msg dispatcher
 msgDispatcher = ScMsgDispatcher();
 msgDispatcher.connect("Rev2", "Rev2 MIDI 1");
-"Let's go...".postln;
 
+// create some controls, passing in the midi msg dispatcher as argument
 slider1 = ScMidiSlider("SLIDER 1", "slider", msgDispatcher);
 slider1.prebindBend(0);
 
@@ -22,7 +22,7 @@ slider2.registerReceiveHandler({
 knob1 = ScMidiKnob("KNOB 1", "knob", msgDispatcher);
 
 
-// make a window
+// make a window,
 w = Window("Midi fader", Rect(100, 500, 400, 400));
 w.layout_(HLayout(
 	slider1.asLayout(show_label:false, show_mute_button:false, learn_label:"L", mute_label:"M"),
@@ -32,8 +32,7 @@ w.layout_(HLayout(
 w.front;
 
 CmdPeriod.doOnce({
-	CCResponder.removeAll;
-	BendResponder.removeAll;
+	msgDispatcher.cleanUp;
 	Window.closeAll
 });
 
