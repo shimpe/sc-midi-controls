@@ -90,12 +90,6 @@ ScMidiSlider : ScNumericControl {
 		| dispatcher, control, src, chan, num, val |
 		var minval = if (this.obsspec.notNil) { this.obsspec.minval } { 0 };
 		var maxval = if (this.obsspec.notNil) { this.obsspec.maxval } { 127 };
-		val.debug("val");
-		num.debug("num");
-		chan.debug("chan");
-		src.debug("src");
-		control.debug("control");
-		dispatcher.debug("dispatcher");
 		{this.guislider.step_(if (this.obsspec.notNil) {this.obsspec.step/this.obsspec.maxval} {1.0/127};)}.defer;
 		{this.guislider.value_(val.linlin(minval, maxval, 0, 1))}.defer;
 		{this.guilabel.string_(this.makeLabel(val))}.defer;
