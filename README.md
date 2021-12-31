@@ -1,5 +1,10 @@
 # sc-midi-controls
-supercollider code to easily add self-learning bi-directional MIDI sliders and knobs
+Supercollider code to easily add self-learning bi-directional MIDI sliders and knobs.
+
+To learn a new control:
+ * click the "learn" button
+ * move the fader or knob on the midi device over the entire range of possible values: this calibrates the range
+ * then unclick the learn button
 
 ```
 (
