@@ -39,25 +39,13 @@ ScNumericControl {
 			if (this.obsctrl.notNil) {
 				switch(this.obstype)
 				{ \cc } {
-					this.msg_dispatcher.midi_out.control(this.obschan, this.obsctrl, val);
+					this.msg_dispatcher.sendCc(this.obschan, this.obsctrl, val);
 				}
 				{ \nrpn } {
-					var cCC_MSB = 99;
-					var cCC_LSB = 98;
-					var cDATA_MSB = 6;
-					var cDATA_LSB = 38;
-					var number_msb = this.obsctrl >> 7;
-					var number_lsb = this.obsctrl & 127;
-					var intval = val.asInteger;
-					var value_msb = intval >> 7;
-					var value_lsb = intval & 127;
-					this.msg_dispatcher.midi_out.control(this.obschan, cCC_MSB, number_msb);
-					this.msg_dispatcher.midi_out.control(this.obschan, cCC_LSB, number_lsb);
-					this.msg_dispatcher.midi_out.control(this.obschan, cDATA_MSB, value_msb);
-					this.msg_dispatcher.midi_out.control(this.obschan, cDATA_LSB, value_lsb);
+					this.msg_dispatcher.sendNrpn(this.obschan, this.obsctrl, val);
 				}
 				{ \bend } {
-					this.msg_dispatcher.midi_out.bend(this.obschan, val.asInteger);
+					this.msg_dispatcher.sendBend(this.obschan, val.asInteger);
 				};
 			} /* else */ {
 				"Warning: " ++ this.uniquename ++ "cannot sent control change since its obsctrl member is not initialized!".postln;

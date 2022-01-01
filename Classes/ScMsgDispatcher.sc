@@ -28,6 +28,33 @@ ScMsgDispatcher {
 		this.bend_responder = nil;
 	}
 
+	sendCc {
+		| chan, control, value |
+		this.midi_out.control(chan, control, value.asInteger);
+	}
+
+	sendNrpn {
+		| chan, control, value |
+		var cCC_MSB = 99;
+		var cCC_LSB = 98;
+		var cDATA_MSB = 6;
+		var cDATA_LSB = 38;
+		var number_msb = control >> 7;
+		var number_lsb = control & 127;
+		var intval = value.asInteger;
+		var value_msb = intval >> 7;
+		var value_lsb = intval & 127;
+		this.midi_out.control(chan, cCC_MSB, number_msb);
+		this.midi_out.control(chan, cCC_LSB, number_lsb);
+		this.midi_out.control(chan, cDATA_MSB, value_msb);
+		this.midi_out.control(chan, cDATA_LSB, value_lsb);
+	}
+
+	sendBend {
+		| chan, value |
+		this.midi_out.bend(chan, value.asInteger);
+	}
+
 	connect {
 		|  midi_device_name, midi_port_name, midi_out_latency=nil |
 		var found = false;
@@ -143,7 +170,7 @@ ScMsgDispatcher {
 		var seq = Pseq(list, 1).asStream;
 		var incomingNum = 0;
 		var incomingVal = 0;
-
+		"initing nrpn".postln;
 		this.nrpn_responder = CCResponder({
 			|src, chan, num, val|
 			var nextseq = seq.next;
