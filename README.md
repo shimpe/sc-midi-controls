@@ -4,7 +4,14 @@ Supercollider code to easily add self-learning bi-directional MIDI sliders and k
 To learn a new control:
  * click the "learn" button
  * move the fader or knob on the midi device over the entire range of possible values: this calibrates the range
- * then unclick the learn button
+ * then unclick the "learn" button
+
+To mute a control:
+* click the "mute" button.
+* Control cannot be modified in the UI, and the values are no longer sent to the synth.
+* Synth msgs are still interpreted and reflected in the UI, but the custom receive handlers are no longer executed.
+* Despite being muted, a button can still learn a new control.
+* Maybe this behavior should be more customizable.
 
 ```
 (
