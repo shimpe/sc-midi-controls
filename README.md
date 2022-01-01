@@ -8,7 +8,7 @@ To learn a new control:
 
 ```
 (
-var slider1, slider2, knob1;
+var slider1, slider2, knob1, textfield;
 var msgDispatcher;
 
 // create a midi msg dispatcher
@@ -35,12 +35,16 @@ slider2.registerReceiveHandler({
 // create a knob
 knob1 = ScMidiKnob("KNOB 1", "knob", msgDispatcher);
 
+// create a textfield
+textfield = ScMidiTextField("TF", "text", msgDispatcher);
+
 // make a window,
 w = Window("Midi fader", Rect(100, 500, 400, 400));
 w.layout_(HLayout(
 	slider1.asLayout(show_label:false, show_mute_button:false, learn_label:"L", mute_label:"M"),
 	slider2.asLayout,
 	knob1.asLayout,
+	textfield.asLayout(show_mute_button:false),
 	nil));
 w.front;
 
