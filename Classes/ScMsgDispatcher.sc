@@ -79,6 +79,8 @@ ScMsgDispatcher {
 		| obstype, observers, src, chan, incomingNum, incomingVal |
 		this.observers.do {
 			| observer |
+			observer.debug("observer");
+			observer.obsspec.debug("obsspec");
 			if ((observer.obstype == obstype).and(
 				observer.obsctrl == incomingNum).and(
 				(observer.obsspec.minval <= incomingVal || observer.obsspec.minval.isNil)).and(
@@ -104,7 +106,7 @@ ScMsgDispatcher {
 			learning_observer.obssrc = src;
 			learning_observer.obsctrl = incomingNum;
 			learning_observer.obschan = chan;
-			if (ctrl_change) {
+			if (ctrl_change || learning_observer.obsspec.isNil) {
 				learning_observer.obsspec = ControlSpec(minval:0, maxval:default_max_value, step:1, default:0, units:"");
 			} /*else*/ {
 				if (incomingVal < learning_observer.obsspec.minval) {
