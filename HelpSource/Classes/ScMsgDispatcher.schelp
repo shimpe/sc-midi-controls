@@ -1,0 +1,217 @@
+TITLE:: ScMsgDispatcher
+summary:: midi msg receiver/interpreter for use with numerical midi controls
+categories:: Midi Utils
+related:: Classes/ScNumericControl, Classes/ScMidiTextField, Classes/ScMidiKnob, Classes/ScMidiSlider
+
+DESCRIPTION::
+ScMsgDispatcher handles midi communication. It listens for parameter updates from synths and sends parameter updates to midi devices. The bidirectional midi controls require an ScMsgDispatcher to get and send updates from/to a midi device. Inside your program, you need to create one ScMsgDispatcher and pass it to every control you create.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+returns a new ScMsgDispatcher instance.
+
+returns:: ScMsgDispatcher instance
+
+
+INSTANCEMETHODS::
+
+METHOD:: learning_observers
+internally managed list of midi controls that are currently learning a new midi connection
+
+returns:: list of learning controls
+
+METHOD:: midi_device_name
+Name of the midi device to which the ScMsgDispatcher is connected. This corresponds to the first string in a MIDIClient.destinations entry.
+
+returns:: a string with the midi device name
+
+METHOD:: initNrpnResponder
+Internal method to set up a CCResponder that recognizes Nrpn messages.
+
+returns:: nothing
+
+METHOD:: cleanUp
+Method that can be called to remove the different CCResponder objects that are created to make the reception of midi device parameter updates possible.
+
+returns:: nothing
+
+METHOD:: midi_port_name
+Name of the midi port name of the midi device to which the ScMsgDispatcher is connected. This corresponds to the second string in a MIDIClient.destinations entry.
+
+returns:: string containing midi port name
+
+METHOD:: notifyObservers
+Internal method that notifies bidirectional midi controls of parameter value updates.
+
+ARGUMENT:: obstype
+The type of msgs the control is bound to (at the time of writing, this can be one of \cc, \nrpn or \bend)
+
+ARGUMENT:: observers
+A list of bidirectional midi controls that need to be informed of a parameter value update.
+
+ARGUMENT:: src
+Midi src from which a parameter update is received.
+
+ARGUMENT:: chan
+Midi channel on which a parameter update is received.
+
+ARGUMENT:: incomingNum
+A controller number from which an update was received. For CC msgs, this is the controller value. For nrpn msgs, this is the NRPN value. For pitch bending, this is a string "BEND".
+
+ARGUMENT:: incomingVal
+The new value received.
+
+returns:: nothing
+
+METHOD:: init
+Internal method to initialize data members.
+
+returns:: nothing
+
+METHOD:: bend_responder
+Internal member that holds a BendResponder that recognizes pitch bend messages.
+
+returns:: a BendResponder
+
+METHOD:: initCcResponder
+Internal method to set up a CCResponder that listens for regular (non-NRPN) controller updates.
+
+ARGUMENT:: ignore_nrpn
+By default, initCcResponder will set up a CCResponder that filters out CCs that are normally used by NRPN. With this argument, one could instantiate a CCResponder that responds to anything (but then an NRPN message will also be interpreted as four distinct CC changes).
+
+returns:: nothing
+
+METHOD:: observers
+Internal list of bidirectional midi controls that will be updated when new values come in.
+
+returns:: list of midi controls
+
+METHOD:: learn
+Internal method that is used when the "Learn" button is clicked.
+
+ARGUMENT:: what
+A midi control that now goes into learning mode.
+
+returns:: nothing
+
+METHOD:: cc_responder
+Internal member to hold a CCResponder that reacts to CCs (not NRPNs).
+
+returns:: a CCResponder
+
+METHOD:: nrpn_responder
+Internal member to hold a CCResponder that reacts to NRPNs (no other CCs).
+
+returns:: a CCResponder
+
+METHOD:: stopLearning
+Internal method used when the learn button is unclicked. This will stop learning mode.
+
+returns:: nothing
+
+METHOD:: initBendResponder
+Internal method to set up a BendResponder listening to pitch bend msgs.
+
+returns:: a BendResponder
+
+METHOD:: sendNrpn
+Method that can be used to send an NRPN to the midi device to which this ScMsgDispatcher is connected.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: control
+Nrpn number
+
+ARGUMENT:: value
+Nrpn value
+
+returns:: nothing
+
+METHOD:: sendCc
+Method that can be used to send a CC to the midi device to which this ScMsgDispatcher is connected.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: control
+CC number
+
+ARGUMENT:: value
+CC value
+
+returns:: nothing
+
+METHOD:: connect
+Method to connect the ScMsgDispatcher to a midi device.
+
+ARGUMENT:: midi_device_name
+Midi device name (corresponds to first string in a MIDIClient.destinations entry).
+
+ARGUMENT:: midi_port_name
+Midi port name (corresponds to first string in a MIDIClient.destinations entry).
+
+ARGUMENT:: midi_out_latency
+Midi out latency. Use 0 if you don't use supercollider internal synthesis. Use Server.default.latency if you do use internal synthesis. Defaults to 0.
+
+returns:: nothing
+
+METHOD:: midi_out_latency
+returns midi_out_latency
+
+returns:: number corresponding to midi_out latency
+
+METHOD:: sendBend
+Method that can be used to send a pitch bend message to a midi device.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: value
+Pitch bend value (0-16383).
+
+returns:: mothing
+
+METHOD:: midi_out
+MIDIOut to which the ScMsgDispatcher is connected.
+
+returns:: a MIDIOut instance
+
+METHOD:: updateLearningObservers
+Internal method that implements the actual learning. It updates all the midi controls in the internal learning_observers list using the type, range, channel, src of the last received CC/NRPN/BEND msg.
+
+ARGUMENT:: obstype
+One of \cc, \nrpn, \bend to denote the kind of msg the control is listening for.
+
+ARGUMENT:: learning_observers
+List of observers to teach.
+
+ARGUMENT:: src
+Midi src
+
+ARGUMENT:: chan
+Midi chan
+
+ARGUMENT:: incomingNum
+Control number being learned
+
+ARGUMENT:: incomingVal
+Control value being learned
+
+ARGUMENT:: default_max_value
+Default value to be used. Set to 0 to enforce recalibrating full range of possible values.
+
+returns:: nothing
+
+
+EXAMPLES::
+
+code::
+(
+msgDispatcher = ScMsgDispatcher();
+msgDispatcher.connect("Rev2", "Rev2 MIDI 1");
+msgDispatcher.sendCC(0, 1, 120); // send value 120 to CC 1 = modwheel on midi channel 0
+)
+::

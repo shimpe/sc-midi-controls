@@ -1,0 +1,169 @@
+TITLE:: ScMidiTextField
+summary:: a bidirectional midi textfield
+categories:: Midi Utils
+related:: Classes/ScMsgDispatcher, Classes/ScMidiKnob, Classes/ScMidiSlider, Classes/ScNumericControl
+
+DESCRIPTION::
+ScMidiTextField models a bidirectional MIDI TextField to hold the value of a CC/NRPN/PITCHBEND controller. The textfield updates when updates are received from the midi device. If the slider is modified, the new values are sent to the midi device.
+
+
+
+CLASSMETHODS::
+
+METHOD:: new
+returns a new ScMidiTextField
+
+ARGUMENT:: unique_name
+A unique_name. Each bidirectional midi control needs a unique name for internal storage purposes.
+
+ARGUMENT:: gui_name
+A gui name. The gui_name appears in the label if the label is shown.
+
+ARGUMENT:: msg_dispatcher
+An ScMsgDispatcher. Controls link to an ScMsgDispatcher so they can listen to/send updates from/to a midi device.
+
+returns:: an ScMidiTextField
+
+
+INSTANCEMETHODS::
+
+METHOD:: guilabel
+A StaticText that forms the label that (optionally) is shown in the UI
+
+returns:: a StaticText
+
+METHOD:: asLayout
+A method that combines guilabel, guiknob, learnbutton and mutebutton into a VLayout.
+
+ARGUMENT:: show_label
+boolean (true/false) that says if the label should be shown
+
+ARGUMENT:: show_learn_button
+boolean (true/false) that says if the learn button should be shown
+
+ARGUMENT:: show_mute_button
+boolean (true/false) that says if the mute button should be shown
+
+ARGUMENT:: learn_label
+string to customize label on learn button
+
+ARGUMENT:: mute_label
+string to customize label on mute button
+
+returns:: a VLayout
+
+METHOD:: guiname
+the gui name as specified in the constructor
+
+returns:: a string
+
+METHOD:: receivePrivate
+an internal method that is called when the midi device sends updates. It is called also if the control is muted. This is typically used to update the displayed value in the bidirectional midi control.
+
+ARGUMENT:: dispatcher
+An ScMsgDispatcher
+
+ARGUMENT:: control
+The control for which the update is received
+
+ARGUMENT:: src
+The midi src from which the update is received
+
+ARGUMENT:: chan
+The midi channel on which the update is received
+
+ARGUMENT:: num
+The controller number (CC), nrpn number (NRPN) or "BEND" (pitch bend)
+
+ARGUMENT:: val
+The controller value (CC), nprn value (NRPN) or pitch bend value that is received from the midi device
+
+returns:: nothing
+
+METHOD:: muted
+boolean (true/false) that indicates if the control is muted
+
+returns:: a boolean
+
+METHOD:: guitextfield
+The TextField that represents this bidirectional midi control.
+
+returns:: a TextField
+
+METHOD:: guilearnbutton
+The Button that represents the learn button
+
+returns:: a Button
+
+METHOD:: guimutebutton
+The Button that represents the mute button
+
+returns:: a Button
+
+METHOD:: init
+Internal method to initialize midi control member variables
+
+ARGUMENT:: unique_name
+Unique name must be unique over all bidirectional midi controls
+
+ARGUMENT:: gui_name
+Gui name is used to display in the label if the label is shown
+
+ARGUMENT:: msg_dispatcher
+An ScMsgDispatcher that listens for/sends new values from/to midi device
+
+returns:: an ScMsgDispatcher
+
+
+EXAMPLES::
+
+code::
+(
+var slider1, slider2, knob1, textfield;
+var msgDispatcher;
+
+// create a midi msg dispatcher
+// the msg dispatcher is responsible for learning and sending information to from midi device
+msgDispatcher = ScMsgDispatcher();
+msgDispatcher.connect("Rev2", "Rev2 MIDI 1");
+
+// create some controls, passing in a unique id, a ui label and the midi msg dispatcher as argument
+slider1 = ScMidiSlider("SLIDER 1", "slider", msgDispatcher);
+// set up the slider to listen to pitch bending msgs on midi channel 0
+slider1.prebindBend(0);
+
+// create a second slider
+slider2 = ScMidiSlider("SLIDER 2", "slider", msgDispatcher);
+// add a custom handler that will be invoked when values are received from the midi device
+slider2.registerReceiveHandler({
+	| dispatcher, control, src, chan, num, val |
+	src.debug(control.uniquename + "src ");
+	chan.debug(control.uniquename + "chan");
+	num.debug(control.uniquename + "num ");
+	val.debug(control.uniquename + "val ");
+});
+
+// create a knob
+knob1 = ScMidiKnob("KNOB 1", "knob", msgDispatcher);
+
+// create a textfield
+textfield = ScMidiTextField("TF", "text", msgDispatcher);
+
+// make a window,
+w = Window("Midi fader", Rect(100, 500, 400, 400));
+w.layout_(HLayout(
+	slider1.asLayout(show_label:false, show_mute_button:false, learn_label:"L", mute_label:"M"),
+	slider2.asLayout,
+	knob1.asLayout,
+	textfield.asLayout(show_mute_button:false),
+	nil));
+w.front;
+
+// clean up when clicking ctrl+. (or cmd+.)
+CmdPeriod.doOnce({
+	msgDispatcher.cleanUp;
+	Window.closeAll
+});
+
+)
+::
