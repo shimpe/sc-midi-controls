@@ -39,10 +39,10 @@ ScMidiSlider : ScNumericControl {
 			| view |
 			var minval = if (this.obsspec.notNil) { this.obsspec.minval } { 0 };
 			var maxval = if (this.obsspec.notNil) { this.obsspec.maxval } { 127 };
+			var mappedvalue = view.value.linlin(0, 1, minval, maxval).asInteger;
+			{this.guilabel.string_(this.makeLabel(mappedvalue))}.defer;
 			if (this.muted.not) {
-				var mappedvalue = view.value.linlin(0, 1, minval, maxval).asInteger;
 				this.send(mappedvalue);
-				{this.guilabel.string_(this.makeLabel(mappedvalue))}.defer;
 			};
 		});
 		var learnbutton = this.guilearnbutton.states_([
@@ -63,6 +63,7 @@ ScMidiSlider : ScNumericControl {
 			[mute_label, Color.white, Color.red]]).action_({
 			|view|
 			this.muted = view.value == 1;
+			{this.guislider.enabled_(this.muted.not)}.defer;
 		});
 		var list_of_controls = [];
 		label = this.guilabel.string_(this.makeLabel(

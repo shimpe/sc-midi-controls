@@ -79,16 +79,14 @@ ScMsgDispatcher {
 		| obstype, observers, src, chan, incomingNum, incomingVal |
 		this.observers.do {
 			| observer |
-			observer.debug("observer");
-			observer.obsspec.debug("obsspec");
 			if ((observer.obstype == obstype).and(
 				observer.obsctrl == incomingNum).and(
 				(observer.obsspec.minval <= incomingVal || observer.obsspec.minval.isNil)).and(
 				(observer.obsspec.maxval >= incomingVal|| observer.obsspec.maxval.isNil)).and(
 				(observer.obschan == chan || observer.obschan.isNil)).and(
 				(observer.obssrc == src || observer.obssrc.isNil))) {
+				observer.receivePrivate(this, observer, src, chan, incomingNum, incomingVal);
 				if (observer.muted.not) {
-					observer.receivePrivate(this, observer, src, chan, incomingNum, incomingVal);
 					observer.receivePublic(this, observer, src, chan, incomingNum, incomingVal);
 				}
 			};
