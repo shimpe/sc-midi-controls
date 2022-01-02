@@ -33,6 +33,25 @@ ScMsgDispatcher {
 		this.midi_out.control(chan, control, value.asInteger);
 	}
 
+	sendRpn {
+		| chan, control, value |
+		var cCC_MSB = 101; // 0x65
+		var cCC_LSB = 100; // 0x64
+		var cDATA_MSB = 6; // 0x06
+		var cDATA_LSB = 38; // 0x26
+		var number_msb = control >> 7;
+		var number_lsb = control & 127;
+		var intval = value.asInteger;
+		var value_msb = intval >> 7;
+		var value_lsb = intval & 127;
+		this.midi_out.control(chan, cCC_LSB, number_lsb);
+		this.midi_out.control(chan, cCC_MSB, number_msb);
+		this.midi_out.control(chan, cDATA_LSB, value_lsb);
+		this.midi_out.control(chan, cDATA_MSB, value_msb);
+		this.midi_out.control(chan, cCC_LSB, 0x7F);
+		this.midi_out.control(chan, cCC_MSB, 0x7F);
+	}
+
 	sendNrpn {
 		| chan, control, value |
 		var cCC_MSB = 99;
