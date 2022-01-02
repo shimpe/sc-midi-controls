@@ -71,7 +71,7 @@ The value to send
 returns:: nothing
 
 METHOD:: obstype
-The type of msg that this control listens to (one of \cc, \nrpn or \bend)
+The type of msg that this control listens to (one of \cc, \rpn, \nrpn or \bend)
 
 returns:: a symbol
 
@@ -96,10 +96,10 @@ ARGUMENT:: chan
 the midi channel on which a msg is received
 
 ARGUMENT:: num
-the controller number (CC), nrpn number (NRPN) or "BEND" (pitch bend)
+the controller number (CC), rpn number (RPN), nrpn number (NRPN) or "BEND" (pitch bend)
 
 ARGUMENT:: val
-the controller value (CC), nrpn value (NRPN) or pitch bend value (pitch bend)
+the controller value (CC), rpn number (RPN), nrpn value (NRPN) or pitch bend value (pitch bend)
 
 returns:: nothing
 
@@ -155,10 +155,10 @@ ARGUMENT:: chan
 Midi channel
 
 ARGUMENT:: num
-Controller number (CC), NRPN number (NPRN) or "BEND" for pitch bend
+Controller number (CC), RPN number (RPN), NRPN number (NPRN) or "BEND" for pitch bend
 
 ARGUMENT:: val
-Controller value (CC), NRPN value (NRPN) or pitch bend value for pitch bend
+Controller value (CC), RPN value (RPN), NRPN value (NRPN) or pitch bend value for pitch bend
 
 returns:: nothing
 
@@ -167,6 +167,26 @@ Method to register a custom handler to be executed if a midi device sends update
 
 ARGUMENT:: handler
 A function expecting arguments (filled in by the framework): (dispatcher, control, src, midi channel, controllernumber, controllervalue)
+
+returns:: nothing
+
+METHOD:: prebindRpn
+A method that can be used to bind a bidirectional midi control to an RPN without requring learning.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: rpnnum
+RPN number
+
+ARGUMENT:: minval
+Minimum expected value
+
+ARGUMENT:: maxval
+Maximum expected value
+
+ARGUMENT:: src
+Midi src
 
 returns:: nothing
 
@@ -211,7 +231,7 @@ returns:: A midi src
 METHOD:: obsctrl
 The midi controller number this control is bound to
 
-returns:: A midi controller number (CC), nrpn number (NRPN) or "BEND" (pitch bend)
+returns:: A midi controller number (CC), rpn number (RPN), nrpn number (NRPN) or "BEND" (pitch bend)
 
 
 EXAMPLES::

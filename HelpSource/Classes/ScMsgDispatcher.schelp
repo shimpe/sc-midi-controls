@@ -27,6 +27,11 @@ Name of the midi device to which the ScMsgDispatcher is connected. This correspo
 
 returns:: a string with the midi device name
 
+METHOD:: initRpnResponder
+Internal method to set up a CCResponder that recognizes Rpn messages.
+
+returns:: nothing
+
 METHOD:: initNrpnResponder
 Internal method to set up a CCResponder that recognizes Nrpn messages.
 
@@ -46,7 +51,7 @@ METHOD:: notifyObservers
 Internal method that notifies bidirectional midi controls of parameter value updates.
 
 ARGUMENT:: obstype
-The type of msgs the control is bound to (at the time of writing, this can be one of \cc, \nrpn or \bend)
+The type of msgs the control is bound to (at the time of writing, this can be one of \cc, \rpn, \nrpn or \bend)
 
 ARGUMENT:: observers
 A list of bidirectional midi controls that need to be informed of a parameter value update.
@@ -58,7 +63,7 @@ ARGUMENT:: chan
 Midi channel on which a parameter update is received.
 
 ARGUMENT:: incomingNum
-A controller number from which an update was received. For CC msgs, this is the controller value. For nrpn msgs, this is the NRPN value. For pitch bending, this is a string "BEND".
+A controller number from which an update was received. For CC msgs, this is the controller value. For rpn msgs this is the RPN number, for rpn msgs this is the RPN value, for nrpn msgs this is the NRPN value. For pitch bending, this is a string "BEND".
 
 ARGUMENT:: incomingVal
 The new value received.
@@ -76,10 +81,10 @@ Internal member that holds a BendResponder that recognizes pitch bend messages.
 returns:: a BendResponder
 
 METHOD:: initCcResponder
-Internal method to set up a CCResponder that listens for regular (non-NRPN) controller updates.
+Internal method to set up a CCResponder that listens for regular (non-NRPN and non-RPN) controller updates.
 
-ARGUMENT:: ignore_nrpn
-By default, initCcResponder will set up a CCResponder that filters out CCs that are normally used by NRPN. With this argument, one could instantiate a CCResponder that responds to anything (but then an NRPN message will also be interpreted as four distinct CC changes).
+ARGUMENT:: ignore_rpn_nrpn
+By default, initCcResponder will set up a CCResponder that filters out CCs that are normally used by RPN/NRPN. With this argument, one could instantiate a CCResponder that responds to anything (but then an RPN/NRPN message will be interpreted as four distinct CC changes).
 
 returns:: nothing
 
@@ -97,7 +102,12 @@ A midi control that now goes into learning mode.
 returns:: nothing
 
 METHOD:: cc_responder
-Internal member to hold a CCResponder that reacts to CCs (not NRPNs).
+Internal member to hold a CCResponder that reacts to CCs (not RPNs/NRPNs).
+
+returns:: a CCResponder
+
+METHOD:: rpn_responder
+Internal member to hold a CCResponder that reacts to RPNs (no other CCs).
 
 returns:: a CCResponder
 
@@ -115,6 +125,20 @@ METHOD:: initBendResponder
 Internal method to set up a BendResponder listening to pitch bend msgs.
 
 returns:: a BendResponder
+
+METHOD:: sendRpn
+Method that can be used to send an RPN to the midi device to which this ScMsgDispatcher is connected.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: control
+Rpn number
+
+ARGUMENT:: value
+Rpn value
+
+returns:: nothing
 
 METHOD:: sendNrpn
 Method that can be used to send an NRPN to the midi device to which this ScMsgDispatcher is connected.
@@ -180,10 +204,10 @@ MIDIOut to which the ScMsgDispatcher is connected.
 returns:: a MIDIOut instance
 
 METHOD:: updateLearningObservers
-Internal method that implements the actual learning. It updates all the midi controls in the internal learning_observers list using the type, range, channel, src of the last received CC/NRPN/BEND msg.
+Internal method that implements the actual learning. It updates all the midi controls in the internal learning_observers list using the type, range, channel, src of the last received CC/RPN/NRPN/BEND msg.
 
 ARGUMENT:: obstype
-One of \cc, \nrpn, \bend to denote the kind of msg the control is listening for.
+One of \cc, \rpn, \nrpn, \bend to denote the kind of msg the control is listening for.
 
 ARGUMENT:: learning_observers
 List of observers to teach.

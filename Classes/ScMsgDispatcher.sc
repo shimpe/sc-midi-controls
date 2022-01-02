@@ -9,6 +9,7 @@ ScMsgDispatcher {
 	var <>learning_observers;
 
 	var <>cc_responder;
+	var <>rpn_responder;
 	var <>nrpn_responder;
 	var <>bend_responder;
 
@@ -24,6 +25,7 @@ ScMsgDispatcher {
 		this.observers = IdentityDictionary();
 		this.learning_observers = IdentityDictionary();
 		this.cc_responder = nil;
+		this.rpn_responder = nil;
 		this.nrpn_responder = nil;
 		this.bend_responder = nil;
 	}
@@ -101,6 +103,7 @@ ScMsgDispatcher {
 		};
 		MIDIIn.connectAll;
 		this.initCcResponder;
+		this.initRpnResponder;
 		this.initNrpnResponder;
 		this.initBendResponder;
 	}
@@ -170,9 +173,9 @@ ScMsgDispatcher {
 	}
 
 	initCcResponder {
-		| ignore_nrpn=true |
+		| ignore_rpn_nrpn=true |
 		this.cc_responder = CCResponder({ |src, chan, num, val|
-			if ( #[99, 98, 6, 38].includes(num) || ignore_nrpn.not) {
+			if ( #[101, 100, 99, 98, 6, 38].includes(num) || ignore_rpn_nrpn.not) {
 				// skip
 			} /*else*/ {
 				// if there are any controllers waiting to learn this CC, now is the time
@@ -182,6 +185,51 @@ ScMsgDispatcher {
 				this.notifyObservers(\cc, this.observers, src, chan, num, val);
 			};
 		});
+	}
+
+	initRpnResponder {
+		var list = #[101, 100, 6, 38];
+		var seq = Pseq(list, 1).asStream;
+		var incomingNum = 0;
+		var incomingVal = 0;
+		"initing rpn".postln;
+		this.nrpn_responder = CCResponder({
+			|src, chan, num, val|
+			var nextseq = seq.next;
+			if(num == nextseq) {
+				switch(num)
+				{ 101 } {
+					incomingNum = incomingNum | (val << 7)
+				}
+				{ 100 } {
+					incomingNum = incomingNum | val
+				}
+				{ 6 } {
+					incomingVal = incomingVal | (val << 7)
+				}
+				{ 38 } {
+					incomingVal = incomingVal | val;
+
+					// if there are any controllers waiting to learn this NRPN, now is the time
+					this.updateLearningObservers(
+						\rpn,
+						this.learning_observers,
+						src,
+						chan,
+						incomingNum,
+						incomingVal,
+						0);
+
+					// notify all relevant observers that this CC was received
+					this.notifyObservers(\rpn, this.observers, src, chan, incomingNum, incomingVal);
+
+					incomingNum = incomingVal = 0;
+					seq.reset;
+				};
+			} {
+				seq.reset
+			};
+		}, num: list);
 	}
 
 	initNrpnResponder {
@@ -241,6 +289,7 @@ ScMsgDispatcher {
 
 	cleanUp {
 		this.cc_responder.remove;
+		this.rpn_responder.remove;
 		this.nrpn_responder.remove;
 		this.bend_responder.remove;
 	}

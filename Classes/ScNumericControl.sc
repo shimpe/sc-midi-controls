@@ -41,6 +41,9 @@ ScNumericControl {
 				{ \cc } {
 					this.msg_dispatcher.sendCc(this.obschan, this.obsctrl, val);
 				}
+				{ \rpn } {
+					this.msg_dispatcher.sendRpn(this.obschan, this.obsctrl, val);
+				}
 				{ \nrpn } {
 					this.msg_dispatcher.sendNrpn(this.obschan, this.obsctrl, val);
 				}
@@ -62,8 +65,22 @@ ScNumericControl {
 			^result;
 		} /* else */ {
 			var value = val ?? {"---"};
-			var ctrlr = if (this.obstype == \cc) { "CC  " } { if (this.obstype == \nrpn) { "NRPN" } { "CC  " } };
-			var result = this.gui_name ++ "\n" ++ ctrlr ++ " " ++ this.obsctrl ++ "\nVAL " ++ value;
+			var ctrlr;
+			var result;
+			switch(this.obstype)
+			{\cc} {
+				ctrlr = "CC  ";
+			}
+			{\nrpn} {
+				ctrlr = "NRPN";
+			}
+			{\rpn} {
+				ctrlr = "RPN ";
+			}
+			{\bend} {
+				ctrlr = "BEND";
+			};
+			result = this.gui_name ++ "\n" ++ ctrlr ++ " " ++ this.obsctrl ++ "\nVAL " ++ value;
 			^result;
 		};
 	}
@@ -73,6 +90,16 @@ ScNumericControl {
 		this.obstype = \cc;
 		this.obssrc = src;
 		this.obsctrl = ccnum;
+		this.obschan = chan;
+		this.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
+		this.msg_dispatcher.observers[this.uniquename.asSymbol] = this;
+	}
+
+	prebindRpn {
+		| chan, rpnnum, minval=0, maxval=127, src=nil |
+		this.obstype = \rpn;
+		this.obssrc = src;
+		this.obsctrl = rpnnum;
 		this.obschan = chan;
 		this.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
 		this.msg_dispatcher.observers[this.uniquename.asSymbol] = this;
