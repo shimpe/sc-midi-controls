@@ -95,4 +95,8 @@ ScMidiSlider : ScNumericControl {
 		{this.guislider.value_(val.linlin(minval, maxval, 0, 1))}.defer;
 		{this.guilabel.string_(this.makeLabel(val))}.defer;
 	}
+
+	refreshUI {
+		{this.guilabel.string_(this.makeLabel(nil))}.defer;
+	}
 }

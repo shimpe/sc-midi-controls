@@ -10,23 +10,25 @@ ScNumericControl {
 
 	var <>msg_dispatcher;
 	var <>receive_handler;
+	var <>value_lookup_table;
 
 	*new {
-		| unique_name, gui_name, msg_dispatcher |
-		^super.new.init(unique_name, gui_name, msg_dispatcher);
+		| unique_name, gui_name, msgDispatcher |
+		^super.new.init(unique_name, gui_name, msgDispatcher);
 	}
 
 	init {
-		| unique_name, gui_name, msg_dispatcher |
+		| unique_name, gui_name, msgDispatcher |
 		this.uniquename = unique_name;
 		this.gui_name = gui_name;
 		this.obschan = 0;
 		this.obstype = nil;
 		this.obsspec = nil;
-		this.msg_dispatcher = msg_dispatcher;
+		this.msg_dispatcher = msgDispatcher;
 		this.receive_handler = nil;
 		this.obssrc = nil;
 		this.obsctrl = nil;
+		this.value_lookup_table = nil;
 	}
 
 	send {
@@ -64,9 +66,16 @@ ScNumericControl {
 			var result = this.gui_name ++ "\n" ++ ctrlr ++ " " ++ "---" ++ "\nVAL " ++ value;
 			^result;
 		} /* else */ {
-			var value = val ?? {"---"};
+			var value = "VAL " ++ (val ?? {"---"});
 			var ctrlr;
 			var result;
+			if (val.notNil) {
+				if (this.value_lookup_table.notNil) {
+					if (this.value_lookup_table[val.asInteger].notNil) {
+						value = this.value_lookup_table[val.asInteger].replace("%", val.asInteger.asString);
+					};
+				};
+			};
 			switch(this.obstype)
 			{\cc} {
 				ctrlr = "CC  ";
@@ -80,7 +89,7 @@ ScNumericControl {
 			{\bend} {
 				ctrlr = "BEND";
 			};
-			result = this.gui_name ++ "\n" ++ ctrlr ++ " " ++ this.obsctrl ++ "\nVAL " ++ value;
+			result = this.gui_name ++ "\n" ++ ctrlr ++ " " ++ this.obsctrl ++ "\n" ++ value;
 			^result;
 		};
 	}
@@ -125,6 +134,16 @@ ScNumericControl {
 		this.msg_dispatcher.observers[this.uniquename.asSymbol] = this;
 	}
 
+	prebindLog {
+		| chan, src = nil |
+		this.obstype = \log;
+		this.obssrc = src;
+		this.obsctrl = nil;
+		this.obschan = chan;
+		this.obsspec = ControlSpec(minval:0, maxval:16383, step:1, default:0, units:"");
+		this.msg_dispatcher.observers[this.uniquename.asSymbol] = this;
+	}
+
 	registerReceiveHandler {
 		| handler |
 		// handler must be a function that has 6 arguments
@@ -149,4 +168,7 @@ ScNumericControl {
 		// override in concrete controls
 	}
 
+	refreshUI {
+		// override in concrete controls
+	}
 }

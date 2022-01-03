@@ -8,6 +8,7 @@ ScMsgDispatcher {
 	var <>observers;
 	var <>learning_observers;
 
+	var <>log_responder;
 	var <>cc_responder;
 	var <>rpn_responder;
 	var <>nrpn_responder;
@@ -24,6 +25,7 @@ ScMsgDispatcher {
 		this.midi_out = nil;
 		this.observers = IdentityDictionary();
 		this.learning_observers = IdentityDictionary();
+		this.log_responder = nil;
 		this.cc_responder = nil;
 		this.rpn_responder = nil;
 		this.nrpn_responder = nil;
@@ -102,6 +104,7 @@ ScMsgDispatcher {
 			"WARNING: couldn't find MIDI endpoint " ++ midi_device_name ++ " " ++ midi_port_name ++ ". Connect failed!.".postln;
 		};
 		MIDIIn.connectAll;
+		this.initLogResponder;
 		this.initCcResponder;
 		this.initRpnResponder;
 		this.initNrpnResponder;
@@ -129,7 +132,7 @@ ScMsgDispatcher {
 		this.observers.do {
 			| observer |
 			if ((observer.obstype == obstype).and(
-				observer.obsctrl == incomingNum).and(
+				(observer.obsctrl == incomingNum) || (observer.obsctrl.isNil)).and(
 				(observer.obsspec.minval <= incomingVal || observer.obsspec.minval.isNil)).and(
 				(observer.obsspec.maxval >= incomingVal|| observer.obsspec.maxval.isNil)).and(
 				(observer.obschan == chan || observer.obschan.isNil)).and(
@@ -169,6 +172,13 @@ ScMsgDispatcher {
 		this.learning_observers.keysValuesDo({
 			| key, value |
 			this.observers[key.asSymbol] = value;
+		});
+	}
+
+	initLogResponder {
+		this.log_responder = CCResponder({
+			| src, chan, num, val |
+			this.notifyObservers(\log, this.observers, src, chan, num, val);
 		});
 	}
 
@@ -285,6 +295,13 @@ ScMsgDispatcher {
 			// notify all relevant observers that this CC was received
 			this.notifyObservers(\bend, this.observers, src, chan, "BEND", val);
 		});
+	}
+
+	refreshUI {
+		this.observers.do {
+			| observer |
+			observer.refreshUI;
+		};
 	}
 
 	cleanUp {

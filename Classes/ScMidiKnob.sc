@@ -7,13 +7,13 @@ ScMidiKnob : ScNumericControl {
 	var <>guiname;
 
 	*new {
-		| unique_name, gui_name, msg_dispatcher |
-		^super.new.init(unique_name, gui_name, msg_dispatcher);
+		| unique_name, gui_name, msgDispatcher |
+		^super.new.init(unique_name, gui_name, msgDispatcher);
 	}
 
 	init {
-		| unique_name, gui_name, msg_dispatcher |
-		super.init(unique_name, gui_name, msg_dispatcher);
+		| unique_name, gui_name, msgDispatcher |
+		super.init(unique_name, gui_name, msgDispatcher);
 		this.muted = false;
 		this.guiknob = Knob();
 		this.guilabel = StaticText();
@@ -93,6 +93,10 @@ ScMidiKnob : ScNumericControl {
 		{this.guiknob.step_(if (this.obsspec.notNil) {this.obsspec.step/this.obsspec.maxval} {1.0/127};)}.defer;
 		{this.guiknob.value_(val.linlin(minval, maxval, 0, 1))}.defer;
 		{this.guilabel.string_(this.makeLabel(val))}.defer;
+	}
+
+	refreshUI {
+		{this.guilabel.string_(this.makeLabel(nil))}.defer;
 	}
 
 }

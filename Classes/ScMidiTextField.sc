@@ -87,4 +87,8 @@ ScMidiTextField : ScNumericControl {
 		{this.guitextfield.string_(val.asInteger.asString)}.defer;
 		{this.guilabel.string_(this.makeLabel(val))}.defer;
 	}
+
+	refreshUI {
+		{this.guilabel.string_(this.makeLabel(nil))}.defer;
+	}
 }
