@@ -8,11 +8,11 @@ ScMsgDispatcher {
 	var <>observers;
 	var <>learning_observers;
 
-	var <>log_responder;
 	var <>cc_responder;
 	var <>rpn_responder;
 	var <>nrpn_responder;
 	var <>bend_responder;
+	var <>programchange_responder;
 
 	*new {
 		^super.new.init();
@@ -25,11 +25,11 @@ ScMsgDispatcher {
 		this.midi_out = nil;
 		this.observers = IdentityDictionary();
 		this.learning_observers = IdentityDictionary();
-		this.log_responder = nil;
 		this.cc_responder = nil;
 		this.rpn_responder = nil;
 		this.nrpn_responder = nil;
 		this.bend_responder = nil;
+		this.programchange_responder = nil;
 	}
 
 	sendCc {
@@ -78,6 +78,12 @@ ScMsgDispatcher {
 		this.midi_out.bend(chan, value.asInteger);
 	}
 
+	sendProgramChange {
+		| chan, bank, patch |
+		this.midi_out.control(chan, 0, bank);
+		this.midi_out.program(chan, patch);
+	}
+
 	connect {
 		|  midi_device_name, midi_port_name, midi_out_latency=nil |
 		var found = false;
@@ -104,11 +110,11 @@ ScMsgDispatcher {
 			"WARNING: couldn't find MIDI endpoint " ++ midi_device_name ++ " " ++ midi_port_name ++ ". Connect failed!.".postln;
 		};
 		MIDIIn.connectAll;
-		this.initLogResponder;
 		this.initCcResponder;
 		this.initRpnResponder;
 		this.initNrpnResponder;
 		this.initBendResponder;
+		this.initProgramchangeResponder;
 	}
 
 	learn {
@@ -131,7 +137,7 @@ ScMsgDispatcher {
 		| obstype, observers, src, chan, incomingNum, incomingVal |
 		this.observers.do {
 			| observer |
-			if ((observer.obstype == obstype).and(
+			if ((observer.obstype == obstype || (observer.obstype == \log)).and(
 				(observer.obsctrl == incomingNum) || (observer.obsctrl.isNil)).and(
 				(observer.obsspec.minval <= incomingVal || observer.obsspec.minval.isNil)).and(
 				(observer.obsspec.maxval >= incomingVal|| observer.obsspec.maxval.isNil)).and(
@@ -175,12 +181,6 @@ ScMsgDispatcher {
 		});
 	}
 
-	initLogResponder {
-		this.log_responder = CCResponder({
-			| src, chan, num, val |
-			this.notifyObservers(\log, this.observers, src, chan, num, val);
-		});
-	}
 
 	initCcResponder {
 		| ignore_rpn_nrpn=true |
@@ -297,6 +297,16 @@ ScMsgDispatcher {
 		});
 	}
 
+	initProgramchangeResponder {
+		this.programchange_responder = ProgramChangeResponder({ | src, chan, val |
+			// if there are any controllers waiting to learn a program change, now is the time
+			this.updateLearningObservers(\prog, this.learning_observers, src, chan, "PROG", val, 127);
+
+			// notify all relevant observers that this change was received
+			this.notifyObservers(\prog, this.observers, src, chan, "PROG", val);
+		});
+	}
+
 	refreshUI {
 		this.observers.do {
 			| observer |
@@ -309,5 +319,6 @@ ScMsgDispatcher {
 		this.rpn_responder.remove;
 		this.nrpn_responder.remove;
 		this.bend_responder.remove;
+		this.programchange_responder.remove;
 	}
 }

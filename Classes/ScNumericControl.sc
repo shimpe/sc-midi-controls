@@ -12,6 +12,8 @@ ScNumericControl {
 	var <>receive_handler;
 	var <>value_lookup_table;
 
+	var <>previous_value;
+
 	*new {
 		| unique_name, gui_name, msgDispatcher |
 		^super.new.init(unique_name, gui_name, msgDispatcher);
@@ -29,6 +31,7 @@ ScNumericControl {
 		this.obssrc = nil;
 		this.obsctrl = nil;
 		this.value_lookup_table = nil;
+		this.previous_value = nil;
 	}
 
 	send {
@@ -41,16 +44,19 @@ ScNumericControl {
 			if (this.obsctrl.notNil) {
 				switch(this.obstype)
 				{ \cc } {
-					this.msg_dispatcher.sendCc(this.obschan, this.obsctrl, val);
+					this.msg_dispatcher.sendCc(this.obschan, this.obsctrl, val.asInteger);
 				}
 				{ \rpn } {
-					this.msg_dispatcher.sendRpn(this.obschan, this.obsctrl, val);
+					this.msg_dispatcher.sendRpn(this.obschan, this.obsctrl, val.asInteger);
 				}
 				{ \nrpn } {
-					this.msg_dispatcher.sendNrpn(this.obschan, this.obsctrl, val);
+					this.msg_dispatcher.sendNrpn(this.obschan, this.obsctrl, val.asInteger);
 				}
 				{ \bend } {
 					this.msg_dispatcher.sendBend(this.obschan, val.asInteger);
+				}
+				{ \prog }{
+					this.msg_dispatcher.sendProgramChange(this.obschan, val.asInteger);
 				};
 			} /* else */ {
 				"Warning: " ++ this.uniquename ++ "cannot sent control change since its obsctrl member is not initialized!".postln;
@@ -66,30 +72,36 @@ ScNumericControl {
 			var result = this.gui_name ++ "\n" ++ ctrlr ++ " " ++ "---" ++ "\nVAL " ++ value;
 			^result;
 		} /* else */ {
-			var value = "VAL " ++ (val ?? {"---"});
+			var value_to_use = val ?? { this.previous_value ?? {"---"}};
+			var value = "VAL " ++ value_to_use;
 			var ctrlr;
 			var result;
-			if (val.notNil) {
+			if (value_to_use.notNil) {
 				if (this.value_lookup_table.notNil) {
-					if (this.value_lookup_table[val.asInteger].notNil) {
-						value = this.value_lookup_table[val.asInteger].replace("%", val.asInteger.asString);
+					if (this.value_lookup_table[value_to_use.asInteger].notNil) {
+						value = this.value_lookup_table[value_to_use.asInteger].replace("%", value_to_use.asInteger.asString);
 					};
 				};
-			};
+			} ;
 			switch(this.obstype)
 			{\cc} {
-				ctrlr = "CC  ";
+				ctrlr = "CC  " ++ " ";
 			}
 			{\nrpn} {
-				ctrlr = "NRPN";
+				ctrlr = "NRPN" ++ " ";
 			}
 			{\rpn} {
-				ctrlr = "RPN ";
+				ctrlr = "RPN " ++ " ";
 			}
 			{\bend} {
-				ctrlr = "BEND";
+				ctrlr = "";
+			}
+			{\prog} {
+				ctrlr = "";
 			};
-			result = this.gui_name ++ "\n" ++ ctrlr ++ " " ++ this.obsctrl ++ "\n" ++ value;
+			result = this.gui_name ++ "\n"
+			         ++ ctrlr ++ this.obsctrl ++ "\n"
+			         ++ value;
 			^result;
 		};
 	}
@@ -134,6 +146,16 @@ ScNumericControl {
 		this.msg_dispatcher.observers[this.uniquename.asSymbol] = this;
 	}
 
+	prebindProgramChange {
+		| chan, minval=0, maxval=127, src=nil |
+		this.obstype = \prog;
+		this.obssrc = src;
+		this.obsctrl = "PROG";
+		this.obschan = chan;
+		this.obsspect = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
+		this.msg_dispatcher.observers[this.uniquename.asSymbol] = this;
+	}
+
 	prebindLog {
 		| chan, src = nil |
 		this.obstype = \log;
@@ -165,7 +187,8 @@ ScNumericControl {
 
 	receivePrivate {
 		| dispatcher, control, src, chan, num, val |
-		// override in concrete controls
+		this.previous_value = val;
+		// refine in concrete controls
 	}
 
 	refreshUI {

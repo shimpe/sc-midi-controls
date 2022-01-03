@@ -84,6 +84,7 @@ ScMidiTextField : ScNumericControl {
 		| dispatcher, control, src, chan, num, val |
 		var minval = if (this.obsspec.notNil) { this.obsspec.minval } { 0 };
 		var maxval = if (this.obsspec.notNil) { this.obsspec.maxval } { 127 };
+		super.receivePrivate(dispatcher, control, src, chan, num, val);
 		{this.guitextfield.string_(val.asInteger.asString)}.defer;
 		{this.guilabel.string_(this.makeLabel(val))}.defer;
 	}
