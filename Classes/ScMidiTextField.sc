@@ -38,10 +38,16 @@ ScMidiTextField : ScNumericControl {
 			var minval = if (this.obsspec.notNil) { this.obsspec.minval } { 0 };
 			var maxval = if (this.obsspec.notNil) { this.obsspec.maxval } { 127 };
 			var mappedvalue = view.value;
-			{this.guilabel.string_(this.makeLabel(mappedvalue))}.defer;
-			if (this.muted.not) {
-				this.send(mappedvalue);
-			};
+			var mappedvalue_num = mappedvalue.asInteger;
+			if ((mappedvalue_num > maxval) || (mappedvalue_num < minval)) {
+				("Value of control " ++ this.uniquename ++ "(" ++ this.guiname ++ ") falls outside range [" ++ minval ++ "," ++ maxval ++ "]. Not sending...").error;
+				{this.guilabel.string_("ERROR\n" ++ "RANGE\n" ++ minval ++ " to " ++ maxval)}.defer;
+			} /* else */ {
+				{this.guilabel.string_(this.makeLabel(mappedvalue))}.defer;
+				if (this.muted.not) {
+					this.send(mappedvalue);
+				};
+			}
 		});
 		var learnbutton = this.guilearnbutton.states_([
 			[learn_label, Color.black, Color.gray],
