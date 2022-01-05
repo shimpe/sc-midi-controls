@@ -78,10 +78,20 @@ ScMsgDispatcher {
 		this.midi_out.bend(chan, value.asInteger);
 	}
 
-	sendProgramChange {
-		| chan, bank, patch |
+	sendBank {
+		| chan, bank |
 		this.midi_out.control(chan, 0, bank);
+	}
+
+	sendProgramChange {
+		| chan, patch |
 		this.midi_out.program(chan, patch);
+	}
+
+	sendBankAndProgramChange {
+		| chan, bank, patch |
+		this.sendBank(chan, bank);
+		this.sendProgramChange(chan, patch);
 	}
 
 	connect {
@@ -151,6 +161,13 @@ ScMsgDispatcher {
 		};
 	}
 
+	notifyControlSendPreviousValue {
+		| unique_name |
+		if (observers[unique_name.asSymbol].notNil) {
+			observers[unique_name.asSymbol].sendPreviousValue();
+		}
+	}
+
 	updateLearningObservers {
 		| obstype, learning_observers, src, chan, incomingNum, incomingVal, default_max_value |
 		// if there are any controllers waiting to learn this CC, now is the time
@@ -202,7 +219,6 @@ ScMsgDispatcher {
 		var seq = Pseq(list, 1).asStream;
 		var incomingNum = 0;
 		var incomingVal = 0;
-		"initing rpn".postln;
 		this.nrpn_responder = CCResponder({
 			|src, chan, num, val|
 			var nextseq = seq.next;
@@ -247,7 +263,6 @@ ScMsgDispatcher {
 		var seq = Pseq(list, 1).asStream;
 		var incomingNum = 0;
 		var incomingVal = 0;
-		"initing nrpn".postln;
 		this.nrpn_responder = CCResponder({
 			|src, chan, num, val|
 			var nextseq = seq.next;

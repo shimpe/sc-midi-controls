@@ -14,6 +14,9 @@ ScNumericControl {
 
 	var <>previous_value;
 
+	var <>list_of_presend_coupled_controls;
+	var <>list_of_postsend_coupled_controls;
+
 	*new {
 		| unique_name, gui_name, msgDispatcher |
 		^super.new.init(unique_name, gui_name, msgDispatcher);
@@ -32,9 +35,26 @@ ScNumericControl {
 		this.obsctrl = nil;
 		this.value_lookup_table = nil;
 		this.previous_value = nil;
+		this.list_of_presend_coupled_controls = [];
+		this.list_of_postsend_coupled_controls = [];
 	}
 
 	send {
+		| val |
+		this.list_of_presend_coupled_controls.do {
+			| ctrl |
+			this.msg_dispatcher.notifyControlSendPreviousValue(ctrl);
+		};
+
+		this.sendRaw(val);
+
+		this.list_of_postsend_coupled_controls.do {
+			| ctrl |
+			this.msg_dispatcher.notifyControlSendPreviousValue(ctrl);
+		}
+	}
+
+	sendRaw {
 		| val |
 
 		if (this.msg_dispatcher.midi_out.isNil) {
@@ -62,6 +82,12 @@ ScNumericControl {
 				"Warning: " ++ this.uniquename ++ "cannot sent control change since its obsctrl member is not initialized!".postln;
 			};
 		};
+	}
+
+	sendPreviousValue {
+		if (this.previous_value.notNil) {
+			this.sendRaw(this.previous_value);
+		}
 	}
 
 	makeLabel {
@@ -152,7 +178,7 @@ ScNumericControl {
 		this.obssrc = src;
 		this.obsctrl = "PROG";
 		this.obschan = chan;
-		this.obsspect = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
+		this.obsspec = ControlSpec(minval:minval, maxval:maxval, step:1, default:0, units:"");
 		this.msg_dispatcher.observers[this.uniquename.asSymbol] = this;
 	}
 
