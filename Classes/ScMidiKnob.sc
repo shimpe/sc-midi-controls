@@ -39,9 +39,13 @@ ScMidiKnob : ScNumericControl {
 			var minval = if (this.obsspec.notNil) { this.obsspec.minval } { 0 };
 			var maxval = if (this.obsspec.notNil) { this.obsspec.maxval } { 127 };
 			var mappedvalue = view.value.linlin(0, 1, minval, maxval).asInteger;
+			this.previous_value = mappedvalue;
 			{this.guilabel.string_(this.makeLabel(mappedvalue))}.defer;
 			if (this.muted.not) {
 				this.send(mappedvalue);
+			};
+			if (this.custom_control_action.notNil) {
+				custom_control_action.(view);
 			};
 		});
 		var learnbutton = this.guilearnbutton.states_([

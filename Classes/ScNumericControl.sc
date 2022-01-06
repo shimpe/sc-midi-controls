@@ -16,6 +16,7 @@ ScNumericControl {
 
 	var <>list_of_presend_coupled_controls;
 	var <>list_of_postsend_coupled_controls;
+	var <>custom_control_action;
 
 	*new {
 		| unique_name, gui_name, msgDispatcher |
@@ -37,6 +38,7 @@ ScNumericControl {
 		this.previous_value = nil;
 		this.list_of_presend_coupled_controls = [];
 		this.list_of_postsend_coupled_controls = [];
+		this.custom_control_action = nil;
 	}
 
 	send {
@@ -202,6 +204,11 @@ ScNumericControl {
 		// num (the controller number (for pitch bending this is a string "BEND")
 		// val (the controller value)
 		this.receive_handler = handler;
+	}
+
+	registerCustomControlAction {
+		| handler |
+		this.custom_control_action = handler;
 	}
 
 	receivePublic {

@@ -43,11 +43,15 @@ ScMidiTextField : ScNumericControl {
 				("Value of control " ++ this.uniquename ++ "(" ++ this.guiname ++ ") falls outside range [" ++ minval ++ "," ++ maxval ++ "]. Not sending...").error;
 				{this.guilabel.string_("ERROR\n" ++ "RANGE\n" ++ minval ++ " to " ++ maxval)}.defer;
 			} /* else */ {
+				this.previous_value = mappedvalue_num;
 				{this.guilabel.string_(this.makeLabel(mappedvalue))}.defer;
 				if (this.muted.not) {
 					this.send(mappedvalue);
 				};
-			}
+			};
+			if (this.custom_control_action.notNil) {
+				custom_control_action.(view);
+			};
 		});
 		var learnbutton = this.guilearnbutton.states_([
 			[learn_label, Color.black, Color.gray],
