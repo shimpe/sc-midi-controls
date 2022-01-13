@@ -114,7 +114,7 @@ ScMidiControlChangeDumper : ScNumericControl {
 			[mute_label, Color.white, Color.red]]).action_({
 			|view|
 			this.muted = view.value == 1;
-			{this.guiknob.enabled_(this.muted.not)}.defer;
+			{this.guiedit.enabled_(this.muted.not)}.defer;
 		});
 		var list_of_controls = [];
 		list_of_controls = list_of_controls.add(this.guiedit);
