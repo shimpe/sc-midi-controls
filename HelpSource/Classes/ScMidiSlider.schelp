@@ -1,117 +1,108 @@
 TITLE:: ScMidiSlider
 summary:: a bidirectional midi slider
 categories:: Midi Utils
-related:: Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScMidiKnob, Classes/ScNumericControl
+related:: Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScNumericControl, Classes/ScMidiKnob, Classes/ScControlChangeDumper
 
 DESCRIPTION::
-ScMidiSlider models a bidirectional MIDI slider. The slider updates when updates are received from the midi device. If the slider is modified, the new values are sent to the midi device.
+ScMidiSlider models a bidirectional MIDI slider. The slider updates when updates are received from the midi device. If the slider is modified in the UI, the new values are sent to the midi device.
+
 
 
 CLASSMETHODS::
 
 METHOD:: new
-Creates a new ScMidiSlider
+	New creates a new ScMidiSlider
+	
 
 ARGUMENT:: unique_name
-A unique_name. Each bidirectional midi control needs a unique name for internal storage purposes.
+unique name, a string, must be unique over all bidirectional midi controls in your program
 
 ARGUMENT:: gui_name
-A gui name. The gui_name appears in the label if the label is shown.
+gui name, a string, needn't be unique over all bidirectional midi controls in your program - part of label
 
-ARGUMENT:: msg_dispatcher
-An ScMsgDispatcher. Controls link to an ScMsgDispatcher so they can listen to/send updates from/to a midi device.
+ARGUMENT:: msgDispatcher
+an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication
 
-returns:: an ScMsgDispatcher
-
+returns:: a new ScMidiSlider
 
 INSTANCEMETHODS::
 
+METHOD:: muted
+	A boolean to indicate that the slider is muted. When a slider is muted,
+	it doesn't send values to the midi device when the user changes the slider.
+	The slider will still update its displayed value if control changes are received from the midi device though.
+	
+
+returns:: a boolean
 METHOD:: guislider
-The Slider that appears in the UI
+	The Slider() instance that is displayed in the UI. Can be accessed if you want to make your own custom layouts.
+	
 
-returns:: a Slider
-
+returns:: a Slider instance
 METHOD:: guilabel
-A StaticText that forms the label that (optionally) is shown in the UI
+	A StaticText instance that is used to display the label.
+	
 
-returns:: A StaticText
+returns:: a StaticText instance
+METHOD:: guilearnbutton
+	A Button that can be used to activate the built-in midi learning mode for this control.
+	
 
-METHOD:: asLayout
-A method that combines guilabel, guislider, learnbutton and mutebutton into a VLayout.
+returns:: a Button
+METHOD:: guimutebutton
+	A Button that can be used to activate the built-in mute mode for this control.
+	
 
-ARGUMENT:: show_label
-boolean (true/false) that says if the label should be shown
-
-ARGUMENT:: show_learn_button
-boolean (true/false) that says if the learn button should be shown
-
-ARGUMENT:: show_mute_button
-boolean (true/false) that says if the mute should be shown
-
-ARGUMENT:: learn_label
-string to customize the text on the learn button
-
-ARGUMENT:: mute_label
-string to customize the text on the mute button
-
-returns:: a VLayout
-
+returns:: a Button
 METHOD:: guiname
-the gui name as specified in the constructor
+	A name for this control (will be used as part of the label in the UI).
+	
 
 returns:: a string
-
-METHOD:: receivePrivate
-an internal method that is called when the midi device sends updates. It is called also if the control is muted. This is typically used to update the displayed value in the bidirectional midi control.
-
-ARGUMENT:: dispatcher
-An ScMsgDispatcher
-
-ARGUMENT:: control
-The control for which the update is received
-
-ARGUMENT:: src
-The midi src from which the update is received
-
-ARGUMENT:: chan
-The midi channel on which the update is received
-
-ARGUMENT:: num
-The controller number (CC), nrpn number (NRPN) or "BEND" (pitch bend)
-
-ARGUMENT:: val
-The controller value (CC), nprn value (NRPN) or pitch bend value that is received from the midi device
-
-returns:: nothing
-
-METHOD:: muted
-boolean (true/false) that indicates if the control is muted
-
-returns:: boolean
-
-METHOD:: guilearnbutton
-the Button that represents the learn button
-
-returns:: a Button
-
-METHOD:: guimutebutton
-the Button that represents the mute button
-
-returns:: a Button
-
 METHOD:: init
-The method to initialize internal data members of the class.
+	Initializes a new ScMidiSlider
+	
 
 ARGUMENT:: unique_name
-Unique name: every bidirectional midi control requires a unique name for internal storage purposes.
+unique name, a string, must be unique over all bidirectional midi controls in your program
 
 ARGUMENT:: gui_name
-Gui name: this name will appear in the label, if the label is shown.
+gui name, a string, needn't be unique over all bidirectional midi controls in your program - part of label
 
-ARGUMENT:: msg_dispatcher
-An ScMsgDispatcher
+ARGUMENT:: msgDispatcher
+an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication
 
-returns:: nothing
+returns:: an initialized ScMidiSlider instance
+METHOD:: receivePrivate
+	Method that is activated every time a control value change is detected that affects this button.
+	receivePrivate is also called when a control is muted so it can still update its state observing the midi device
+	
+
+ARGUMENT:: dispatcher
+an ScMsgDispatcher, resonsible for all midi communication
+
+ARGUMENT:: control
+a midi control
+
+ARGUMENT:: src
+midi source
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: num
+controller number
+
+ARGUMENT:: val
+controller value
+
+returns:: the instance itself
+
+METHOD:: refreshUI
+	method called when all controls in the system need to reevaluate their labels, e.g. because of dependencies between controls
+	
+
+returns:: the instance itself
 
 
 EXAMPLES::
@@ -165,4 +156,5 @@ CmdPeriod.doOnce({
 });
 
 )
+
 ::

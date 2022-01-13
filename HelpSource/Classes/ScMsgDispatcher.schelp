@@ -1,241 +1,318 @@
 TITLE:: ScMsgDispatcher
-summary:: midi msg receiver/interpreter for use with numerical midi controls
+summary:: a data structure that manages all midi controls and centralizes all midi communication
 categories:: Midi Utils
-related:: Classes/ScNumericControl, Classes/ScMidiTextField, Classes/ScMidiKnob, Classes/ScMidiSlider
+related:: Classes/ScMidiTextField, Classes/ScNumericControl, Classes/ScMidiSlider, Classes/ScMidiKnob, Classes/ScMidiControlChangeDumper
 
 DESCRIPTION::
-ScMsgDispatcher handles midi communication. It listens for parameter updates from synths and sends parameter updates to midi devices. The bidirectional midi controls require an ScMsgDispatcher to get and send updates from/to a midi device. Inside your program, you need to create one ScMsgDispatcher and pass it to every control you create.
+ScMsgDispatcher is a central class in the whole framework. It maintains lists of instantiated controls (stored by their unique name) and it knows how to receive/parse and send midi control changes. It sets up midi listeners, and notifies registered controls of incoming messages. Inside your program, you need to create one ScMsgDispatcher and pass it to every control you create.
+
 
 
 CLASSMETHODS::
 
 METHOD:: new
-returns a new ScMsgDispatcher instance.
+creates a new ScMsgDispatcher
 
-returns:: ScMsgDispatcher instance
-
+returns:: a new ScMsgDispatcher
 
 INSTANCEMETHODS::
-
-METHOD:: learning_observers
-internally managed list of midi controls that are currently learning a new midi connection
-
-returns:: list of learning controls
 
 METHOD:: midi_device_name
 Name of the midi device to which the ScMsgDispatcher is connected. This corresponds to the first string in a MIDIClient.destinations entry.
 
-returns:: a string with the midi device name
-
-METHOD:: initRpnResponder
-Internal method to set up a CCResponder that recognizes Rpn messages.
-
-returns:: nothing
-
-METHOD:: initNrpnResponder
-Internal method to set up a CCResponder that recognizes Nrpn messages.
-
-returns:: nothing
-
-METHOD:: cleanUp
-Method that can be called to remove the different CCResponder objects that are created to make the reception of midi device parameter updates possible.
-
-returns:: nothing
-
+returns:: a string with the midi device name. Gets initialized during call to 'connect'.
 METHOD:: midi_port_name
-Name of the midi port name of the midi device to which the ScMsgDispatcher is connected. This corresponds to the second string in a MIDIClient.destinations entry.
+Midi port to which the ScMsgDispatcher is connected. This corresponds to the second string in a MIDIClient.destinations entry.
 
-returns:: string containing midi port name
+returns:: a string with the midi port name. Gets initialized during call to 'connect'.
+METHOD:: midi_out_latency
+Midi out latency. Use 0 if talk to an external synth. Use Server.default.latency if you do use internal synthesis. Defaults to nil, which is translated to Server.default.latency. This gets initialized during the call to 'connect'.
 
-METHOD:: notifyObservers
-Internal method that notifies bidirectional midi controls of parameter value updates.
+returns:: an integer midi_out_latency
+METHOD:: midi_out
+MIDIOut to which the ScMsgDispatcher is connected
 
-ARGUMENT:: obstype
-The type of msgs the control is bound to (at the time of writing, this can be one of \cc, \rpn, \nrpn or \bend)
+returns:: a MIDIOut instance. this gets initialized during the call to 'connect'
+METHOD:: observers
+List of midi controls that are configured and bound to some midi controller
 
-ARGUMENT:: observers
-A list of bidirectional midi controls that need to be informed of a parameter value update.
+returns:: a list of midi controls
+METHOD:: learning_observers
+list of midi controls that are currently in learning mode. Controls in learning mode update their src, channel, type and spec as control changes are received. When you press a learn button in the ui, the corresponding control is added into this list automatically. During learning, the control is also already added to the normal observers, so it can interactively update its visualization based on what it is learning.
 
-ARGUMENT:: src
-Midi src from which a parameter update is received.
+returns:: a list of midi controls that are currently in learning mode
+METHOD:: cc_responder
+internal CCResponder that listens for control changes
+
+returns:: a CCResponder
+METHOD:: rpn_responder
+internal CCResponder that listens for RPN
+
+returns:: a CCResponder
+METHOD:: nrpn_responder
+internal CCResponder that listens for NRPN
+
+returns:: a CCResponder
+METHOD:: bend_responder
+internal BendResponder that listens for pitch bend msgs
+
+returns:: a BendResponder
+METHOD:: programchange_responder
+internal CCResponder that listens for pitch program changes
+
+returns:: a CCResponder
+METHOD:: init
+initializes a new ScMsgDispatcher
+
+returns:: an initialized ScMsgDispatcher (note: initialized is not the same as connected to a midi device)
+METHOD:: sendCc
+sends a midi CC (control change) to the midi device. Used by controls of type \cc that want to send a value to the midi device.
 
 ARGUMENT:: chan
-Midi channel on which a parameter update is received.
+midi channel
 
-ARGUMENT:: incomingNum
-A controller number from which an update was received. For CC msgs, this is the controller value. For rpn msgs this is the RPN number, for rpn msgs this is the RPN value, for nrpn msgs this is the NRPN value. For pitch bending, this is a string "BEND".
+ARGUMENT:: control
+midi controller number
 
-ARGUMENT:: incomingVal
-The new value received.
+ARGUMENT:: value
+midi controller value
 
-returns:: nothing
-
-METHOD:: init
-Internal method to initialize data members.
-
-returns:: nothing
-
-METHOD:: bend_responder
-Internal member that holds a BendResponder that recognizes pitch bend messages.
-
-returns:: a BendResponder
-
-METHOD:: initCcResponder
-Internal method to set up a CCResponder that listens for regular (non-NRPN and non-RPN) controller updates.
-
-ARGUMENT:: ignore_rpn_nrpn
-By default, initCcResponder will set up a CCResponder that filters out CCs that are normally used by RPN/NRPN. With this argument, one could instantiate a CCResponder that responds to anything (but then an RPN/NRPN message will be interpreted as four distinct CC changes).
-
-returns:: nothing
-
-METHOD:: observers
-Internal list of bidirectional midi controls that will be updated when new values come in.
-
-returns:: list of midi controls
-
-METHOD:: learn
-Internal method that is used when the "Learn" button is clicked.
-
-ARGUMENT:: what
-A midi control that now goes into learning mode.
-
-returns:: nothing
-
-METHOD:: cc_responder
-Internal member to hold a CCResponder that reacts to CCs (not RPNs/NRPNs).
-
-returns:: a CCResponder
-
-METHOD:: rpn_responder
-Internal member to hold a CCResponder that reacts to RPNs (no other CCs).
-
-returns:: a CCResponder
-
-METHOD:: nrpn_responder
-Internal member to hold a CCResponder that reacts to NRPNs (no other CCs).
-
-returns:: a CCResponder
-
-METHOD:: stopLearning
-Internal method used when the learn button is unclicked. This will stop learning mode.
-
-returns:: nothing
-
-METHOD:: initBendResponder
-Internal method to set up a BendResponder listening to pitch bend msgs.
-
-returns:: a BendResponder
+returns:: the instance itself
 
 METHOD:: sendRpn
-Method that can be used to send an RPN to the midi device to which this ScMsgDispatcher is connected.
+sends an RPN message to the midi device. Used by controls of type pn that want to send a value to the midi device.
 
 ARGUMENT:: chan
-Midi channel
+midi channel
 
 ARGUMENT:: control
-Rpn number
+midi controller number
 
 ARGUMENT:: value
-Rpn value
+midi controller value
 
-returns:: nothing
+returns:: the instance itself
 
 METHOD:: sendNrpn
-Method that can be used to send an NRPN to the midi device to which this ScMsgDispatcher is connected.
+sends an NRPN message to the midi device. Used by controls of type 
+rpn that want to send a value to the midi device.
 
 ARGUMENT:: chan
-Midi channel
+midi channel
 
 ARGUMENT:: control
-Nrpn number
+midi controller number
 
 ARGUMENT:: value
-Nrpn value
+midi controller value
 
-returns:: nothing
-
-METHOD:: sendCc
-Method that can be used to send a CC to the midi device to which this ScMsgDispatcher is connected.
-
-ARGUMENT:: chan
-Midi channel
-
-ARGUMENT:: control
-CC number
-
-ARGUMENT:: value
-CC value
-
-returns:: nothing
-
-METHOD:: connect
-Method to connect the ScMsgDispatcher to a midi device.
-
-ARGUMENT:: midi_device_name
-Midi device name (corresponds to first string in a MIDIClient.destinations entry).
-
-ARGUMENT:: midi_port_name
-Midi port name (corresponds to first string in a MIDIClient.destinations entry).
-
-ARGUMENT:: midi_out_latency
-Midi out latency. Use 0 if you don't use supercollider internal synthesis. Use Server.default.latency if you do use internal synthesis. Defaults to 0.
-
-returns:: nothing
-
-METHOD:: midi_out_latency
-returns midi_out_latency
-
-returns:: number corresponding to midi_out latency
+returns:: the instance itself
 
 METHOD:: sendBend
-Method that can be used to send a pitch bend message to a midi device.
+sends a pitch bend message to the midi device. Used by controls of type end
 
 ARGUMENT:: chan
-Midi channel
+midi channel
 
 ARGUMENT:: value
-Pitch bend value (0-16383).
+bend value (0..16383)
 
-returns:: mothing
+returns:: the instance itself
 
-METHOD:: midi_out
-MIDIOut to which the ScMsgDispatcher is connected.
-
-returns:: a MIDIOut instance
-
-METHOD:: updateLearningObservers
-Internal method that implements the actual learning. It updates all the midi controls in the internal learning_observers list using the type, range, channel, src of the last received CC/RPN/NRPN/BEND msg.
-
-ARGUMENT:: obstype
-One of \cc, \rpn, \nrpn, \bend to denote the kind of msg the control is listening for.
-
-ARGUMENT:: learning_observers
-List of observers to teach.
-
-ARGUMENT:: src
-Midi src
+METHOD:: sendBank
+sends a bank select msg to the midi device.
 
 ARGUMENT:: chan
-Midi chan
+midi channel
+
+ARGUMENT:: bank
+bank value
+
+returns:: the instance itself
+
+METHOD:: sendProgramChange
+sends a program change msg to the midi device. Used by controls of type \prog
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: patch
+patch value
+
+returns:: the instance itself
+
+METHOD:: sendBankAndProgramChange
+sends a bank select followed by a program change msg to the midi device.
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: bank
+bank value
+
+ARGUMENT:: patch
+patch value
+
+returns:: the instance itself
+
+METHOD:: connect
+connect initializes the midi system and connects to a specific midi device
+
+ARGUMENT:: midi_device_name
+Name of the midi device to which the ScMsgDispatcher is connected. This corresponds to the first string in a MIDIClient.destinations entry.
+
+ARGUMENT:: midi_port_name
+Midi port to which the ScMsgDispatcher is connected. This corresponds to the second string in a MIDIClient.destinations entry.
+
+ARGUMENT:: midi_out_latency
+Midi out latency. Use 0 if talk to an external synth. Use Server.default.latency if you do use internal synthesis. Defaults to nil, which is translated to Server.default.latency. Use 0 if you talk to external synths.
+
+returns:: the instance itself
+
+METHOD:: learn
+learn adds a midi control to the list of learning controls; learning controls update their specs as control change (or pitch bend, program change) messages are received
+
+ARGUMENT:: what
+a midi control that will start learning
+
+returns:: the instance itself
+
+METHOD:: stopLearning
+stops all learning and transfers the learning controls to the list of known midi controls
+
+returns:: the instance itself
+
+METHOD:: notifyObservers
+	Internal method that notifies all known midi controls of an incoming control change.
+	All controllers (muted and unmuted) will have their receivePrivate method called.
+	Only unmuted controllers will have their receivePublic method called.
+	Normally control changes are only sent to "compatible" controls.
+	E.g. a midi control that is bound to an NRPN message will only get notifications if the nrpn it is
+	listening to came in. A control of type \log is compatible with all recognized control changes.
+	
+
+ARGUMENT:: obstype
+type of control change that was detected (\cc, \rpn, \nrpn, \bend, \prog)
+
+ARGUMENT:: observers
+list of known controls in the system
+
+ARGUMENT:: src
+midi src of control change
+
+ARGUMENT:: chan
+midi channel of control change
 
 ARGUMENT:: incomingNum
-Control number being learned
+midi controller number of incoming change (or "BEND" or "PROG"))
 
 ARGUMENT:: incomingVal
-Control value being learned
+midi controller value of incoming change
+
+returns:: the instance itself
+
+METHOD:: notifyControlSendPreviousValue
+	Asks control with a given unique name to resend its last received value.
+	This is typically used by coupled controls, e.g. to resend a bank select if a program change control is adapted.
+	
+
+ARGUMENT:: unique_name
+unique name of the control
+
+returns:: the instance itself
+
+METHOD:: updateLearningObservers
+Internal method that adapts the learning observer with the incoming control changes. The learning controls are also added to the list of known controls so they can interactive visualize their internal state as they are learning.
+
+ARGUMENT:: obstype
+type of incoming control change (\cc, \rpn, \nrpn, \bend, \prog)
+
+ARGUMENT:: learning_observers
+list of controls that are currently in learning mode
+
+ARGUMENT:: src
+midi src of incoming control change
+
+ARGUMENT:: chan
+midi channel of incoming control change
+
+ARGUMENT:: incomingNum
+midi controller number of incoming control change (or "BEND" or "PROG")
+
+ARGUMENT:: incomingVal
+midi controller value of incoming control change
 
 ARGUMENT:: default_max_value
-Default value to be used. Set to 0 to enforce recalibrating full range of possible values.
+	Default max value to use when learning a new controller.
+	0 will force range calibration (i.e. user is supposed to send complete range of possible values during learning).
+	
 
-returns:: nothing
+returns:: the instance itself
+
+METHOD:: extractObserverProperties
+Internal method. Extracts properties from a midi control that can be used to save the state of the control to file into an IdentityDictionary
+
+ARGUMENT:: observer
+midi control
+
+returns:: a list with 2 elements: element[0] is the observer's unique name and element[1] is the dictionary with properties
+METHOD:: save
+saves the state of all known controls to disk. state is stored per control based on unique name of the control
+
+ARGUMENT:: filename
+file name to save
+
+returns:: the instance itself
+
+METHOD:: load
+loads the state of all known controls from disk, based on unique name to set loaded info into system state
+
+ARGUMENT:: filename
+file name to load
+
+returns:: the instance itself
+
+METHOD:: initCcResponder
+Internal method to set up a CcResponder. By default some controller numbers are ignored (because they are used in RPN or NRPN messages.
+
+ARGUMENT:: ignore_rpn_nrpn
+default true, which means that this CcResponder will not fire if a controller numer used for rpn or nrpn is received
+
+returns:: the instance itself
+
+METHOD:: initRpnResponder
+Internal method to set up an RPN Responder.
+
+returns:: the instance itself
+
+METHOD:: initNrpnResponder
+Internal method to set up an NRPN Responder.
+
+returns:: the instance itself
+
+METHOD:: initBendResponder
+Internal method to set up a pitch bend responder.
+
+returns:: the instance itself
+
+METHOD:: initProgramchangeResponder
+Internal method to set up an initProgramChangeResponder
+
+returns:: the instance itself
+
+METHOD:: refreshUI
+Method that can be called to ask all known midi controls to update their label
+
+returns:: the instance itself
+
+METHOD:: cleanUp
+method that removes all created reponders
+
+returns:: the instance itself
 
 
 EXAMPLES::
 
 code::
-(
-msgDispatcher = ScMsgDispatcher();
-msgDispatcher.connect("Rev2", "Rev2 MIDI 1");
-msgDispatcher.sendCC(0, 1, 120); // send value 120 to CC 1 = modwheel on midi channel 0
-)
+(FIXME some example code)
 ::

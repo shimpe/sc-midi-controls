@@ -1,118 +1,128 @@
 TITLE:: ScMidiTextField
-summary:: a bidirectional midi textfield
+summary:: a bidirectional midi text field
 categories:: Midi Utils
-related:: Classes/ScMsgDispatcher, Classes/ScMidiKnob, Classes/ScMidiSlider, Classes/ScNumericControl
+related:: Classes/ScMsgDispatcher, Classes/ScMidiKnob, Classes/ScNumericControl, Classes/ScMidiSlider, Classes/ScControlChangeDumper
 
 DESCRIPTION::
-ScMidiTextField models a bidirectional MIDI TextField to hold the value of a CC/NRPN/PITCHBEND controller. The textfield updates when updates are received from the midi device. If the slider is modified, the new values are sent to the midi device.
+ScMidiTextField models a bidirectional MIDI textfield. The textfield updates when updates are received from the midi device. If the textfield is modified in the UI, new values are sent to the midi device. The values are checked against the min and max allowed value defined in the control spec (part of the base class ScNumericControl).
 
 
 
 CLASSMETHODS::
 
 METHOD:: new
-returns a new ScMidiTextField
+	New creates a new ScMidiTextField
+	
 
 ARGUMENT:: unique_name
-A unique_name. Each bidirectional midi control needs a unique name for internal storage purposes.
+unique name, a string, must be unique over all bidirectional midi controls in your program
 
 ARGUMENT:: gui_name
-A gui name. The gui_name appears in the label if the label is shown.
+gui name, a string, needn't be unique over all bidirectional midi controls in your program - part of label
 
-ARGUMENT:: msg_dispatcher
-An ScMsgDispatcher. Controls link to an ScMsgDispatcher so they can listen to/send updates from/to a midi device.
+ARGUMENT:: msgDispatcher
+an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication
 
-returns:: an ScMidiTextField
-
+returns:: a new ScMidiTextField
 
 INSTANCEMETHODS::
 
-METHOD:: guilabel
-A StaticText that forms the label that (optionally) is shown in the UI
-
-returns:: a StaticText
-
-METHOD:: asLayout
-A method that combines guilabel, guiknob, learnbutton and mutebutton into a VLayout.
-
-ARGUMENT:: show_label
-boolean (true/false) that says if the label should be shown
-
-ARGUMENT:: show_learn_button
-boolean (true/false) that says if the learn button should be shown
-
-ARGUMENT:: show_mute_button
-boolean (true/false) that says if the mute button should be shown
-
-ARGUMENT:: learn_label
-string to customize label on learn button
-
-ARGUMENT:: mute_label
-string to customize label on mute button
-
-returns:: a VLayout
-
-METHOD:: guiname
-the gui name as specified in the constructor
-
-returns:: a string
-
-METHOD:: receivePrivate
-an internal method that is called when the midi device sends updates. It is called also if the control is muted. This is typically used to update the displayed value in the bidirectional midi control.
-
-ARGUMENT:: dispatcher
-An ScMsgDispatcher
-
-ARGUMENT:: control
-The control for which the update is received
-
-ARGUMENT:: src
-The midi src from which the update is received
-
-ARGUMENT:: chan
-The midi channel on which the update is received
-
-ARGUMENT:: num
-The controller number (CC), nrpn number (NRPN) or "BEND" (pitch bend)
-
-ARGUMENT:: val
-The controller value (CC), nprn value (NRPN) or pitch bend value that is received from the midi device
-
-returns:: nothing
-
 METHOD:: muted
-boolean (true/false) that indicates if the control is muted
+	A boolean to indicate that the knob is muted. When a knob is muted,
+	it doesn't send values to the midi device when the user rotates the knob.
+	The knob will still update its displayed value if control changes are received from the midi device though.
+	
 
 returns:: a boolean
-
 METHOD:: guitextfield
-The TextField that represents this bidirectional midi control.
+	The TextField() instance that is displayed in the UI. Can be accessed if you want to make your own custom layouts.
+	
 
-returns:: a TextField
+returns:: a Slider instance
+METHOD:: guilabel
+	A StaticText instance that is used to display the label.
+	
 
+returns:: a StaticText instance
 METHOD:: guilearnbutton
-The Button that represents the learn button
+	A Button that can be used to activate the built-in midi learning mode for this control.
+	
 
 returns:: a Button
-
 METHOD:: guimutebutton
-The Button that represents the mute button
+	A Button that can be used to activate the built-in mute mode for this control.
+	
 
 returns:: a Button
+METHOD:: guiname
+	A name for this control (will be used as part of the label in the UI).
+	
 
+returns:: a string
 METHOD:: init
-Internal method to initialize midi control member variables
+	Initializes a new ScMidiTextField
+	
 
 ARGUMENT:: unique_name
-Unique name must be unique over all bidirectional midi controls
+unique name, a string, must be unique over all bidirectional midi controls in your program
 
 ARGUMENT:: gui_name
-Gui name is used to display in the label if the label is shown
+gui name, a string, needn't be unique over all bidirectional midi controls in your program - part of label
 
-ARGUMENT:: msg_dispatcher
-An ScMsgDispatcher that listens for/sends new values from/to midi device
+ARGUMENT:: msgDispatcher
+an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication
 
-returns:: an ScMsgDispatcher
+returns:: an initialized ScMidiTextField instance
+METHOD:: asLayout
+	Convenience method that sets up the guitextfield, guilabel, guilearnbutton and guimutebutton and returns them into a VLayout.
+	
+
+ARGUMENT:: show_label
+show the label above the midi control (default: true)
+
+ARGUMENT:: show_learn_button
+show the learn button under the midi control (default:true)
+
+ARGUMENT:: show_mute_button
+show the mute button under the midi control (default:true)
+
+ARGUMENT:: learn_label
+text to display on the learn button (default: "Learn")
+
+ARGUMENT:: mute_label
+text to display on the mute button (default: "Mute")
+
+returns:: a VLayout containing a label (optional), a textfield, and two buttons (optional)
+METHOD:: receivePrivate
+	Method that is activated every time a control value change is detected that affects this button.
+	receivePrivate is also called when a control is muted so it can still update its state observing the midi device
+	
+
+ARGUMENT:: dispatcher
+an ScMsgDispatcher, resonsible for all midi communication
+
+ARGUMENT:: control
+a midi control
+
+ARGUMENT:: src
+midi source
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: num
+controller number
+
+ARGUMENT:: val
+controller value
+
+returns:: the instance itself
+
+METHOD:: refreshUI
+	method called when all controls in the system need to reevaluate their labels, e.g. because of dependencies between controls
+	
+
+returns:: the instance itself
 
 
 EXAMPLES::
@@ -152,7 +162,7 @@ textfield = ScMidiTextField("TF", "text", msgDispatcher);
 // make a window,
 w = Window("Midi fader", Rect(100, 500, 400, 400));
 w.layout_(HLayout(
-	slider1.asLayout(show_label:false, show_mute_button:false, learn_label:"L", mute_label:"M"),
+	slider1.asLayout(show_label:false, show_mute_button:false, learn_label:"L"),
 	slider2.asLayout,
 	knob1.asLayout,
 	textfield.asLayout(show_mute_button:false),
@@ -166,4 +176,5 @@ CmdPeriod.doOnce({
 });
 
 )
+
 ::

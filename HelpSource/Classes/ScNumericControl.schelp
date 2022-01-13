@@ -1,10 +1,11 @@
 TITLE:: ScNumericControl
 summary:: base class for numeric midi controls
 categories:: Midi Utils
-related:: Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScMidiKnob, Classes/ScMidiSlider
+related:: Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScMidiKnob, Classes/ScMidiSlider, Classes/ScControlChangeDumper
 
 DESCRIPTION::
 Base class for the concrete controls like ScMidiTextField, ScMidiKnob, ScMidiSlider. This class contains everything that is common between different kinds of bidirectional midi controls that hold a single numerical value. Normally you will never instantiate a ScNumericControl directly. It contains no ui controls.
+
 
 
 CLASSMETHODS::
@@ -13,230 +14,385 @@ METHOD:: new
 creates a new ScNumericControl
 
 ARGUMENT:: unique_name
-Every ScNumericControl needs a unique name. This name is configured at the time of instantiating the control (typically in the constructor arguments).
+	Every ScNumericControl needs a unique name.
+	This name is configured at the time of instantiating the control (typically in the constructor arguments).
+	
 
 ARGUMENT:: gui_name
-The name that is used in the label, if the label is shown. Different controls can have the same gui_name, but must have a distinct unique_name.
+	Every ScNumericControl needs a gui name. This is a name that is shown in the label, if the label is visible.
+	Multiple controls may have the same gui name, if desired.
+	
 
-ARGUMENT:: msg_dispatcher
-An ScMsgDispatcher that receives and interprets msgs coming from the midi device, and that can send msgs to the midi device.
+ARGUMENT:: msgDispatcher
+	The name that is used in the label, if the label is shown.
+	Different controls can have the same gui_name, but must have a distinct unique_name.
+	
 
-returns:: an ScMsgDispatcher
-
+returns:: an ScNumericControl
 
 INSTANCEMETHODS::
 
-METHOD:: prebindBend
-A method that can be used to bind a control to the pitch bender. In that case, no midi learning is needed.
+METHOD:: uniquename
+encapsulates the unique name for this control. unique name is used internally and must be unique over all controls. unique name is passed to the control in the constructor
 
-ARGUMENT:: chan
-Midi channel
+returns:: a unique name (string)
+METHOD:: gui_name
+encapsulates the gui name for this control. gui name can be shared with other controls and is used to make a label. gui_name is passed to the control in the constructor.
 
-ARGUMENT:: minval
-Minimum value (normally 0).
+returns:: a gui name (string)
+METHOD:: obschan
+encapsulates this control's midi channel. This is initialized during prebinding or during learning.
 
-ARGUMENT:: maxval
-Maximum value (normally 16383).
+returns:: a midichannel (Integer)
+METHOD:: obstype
+	Encapsulates this control's controller type. This is initialized during prebinding or during learning.
+	At the moment of writing this can be one of \cc, \bend, \rpn, \nrpn, \log.
+	
 
-ARGUMENT:: src
-Midi src
+returns:: a control type
+METHOD:: obsspec
+	Encapsulates this control's ControlSpec (min value, max value, default value).
+	This is initialized during prebinding or during learning.
+	
 
-returns:: nothing
+returns:: a ControlSpec
+METHOD:: obssrc
+	Encapsulates this control's midi src.
+	This is initialized during prebinding or during learning.
+	
 
+returns:: a midi src (Integer)
+METHOD:: obsctrl
+	Encapsulates this control's midi controller number.
+	This is initialized during prebinding or during learning.
+	
+
+returns:: a controller number (or "BEND" or "PROG")
+METHOD:: msg_dispatcher
+	Encapsulates this control's midi msg dispatcher.
+	This is passed to the control in the constructor.
+	
+
+returns:: a msgDispatcher, responsible for all midi communication
+METHOD:: receive_handler
+	Encapsulates this control's custom receive handler.
+	This is optionally set up by the end user, using the "registerReceiveHandler" call.
+	The custom receive handler must be a function taking 6 arguments.
+	These 6 arguments are: 1. msgDispatcher, 2. the ScMidiNumericControl itself, 3. the midi src,
+	4. the midi channel, 5. the controller number (for pitch bending this is a string "BEND", for program change this
+	is a string "PROG") and 6. the controller value that is received
+	
+
+returns:: a function
+METHOD:: value_lookup_table
+	Encapsulates this control's value_lookup_table. If a value_lookup_table is set up (this is optional), it will be used to translate the midi values into symbolic names which are displayed in the label (if the label is visible). See the bigsky example for an illustration.
+	
+
+returns:: an array where index in the array corresponds to midi controller value, and entry in the array corresponds to the corresponding symbolic value
+METHOD:: previous_value
+	Encapsulates this control's last received value, in case it needs to resend its value at some point.
+	
+
+returns:: last received controller value
+METHOD:: list_of_presend_coupled_controls
+	A list of unique names of other controls in the system that need to send their value before this control can send its value. Example would be having two controls, one for bank number and one for program select. When program select is modified, also bank number has to be sent again.
+	
+
+returns:: a list of unique names
+METHOD:: list_of_postsend_coupled_controls
+	A list of unique names of other controls in the system that need to send their value before this control can send its value. Example would be having two controls, one for bank number and one for program select. When bank number is modified, also program select has to be resent.
+	
+
+returns:: a list of unique names
+METHOD:: custom_control_action
+	An optional action triggered when the user modifies the control in the supercollider UI. Sending control changes to the midi device is handled automatically by the framework and doesn't need any custom control action to be defined. The custom_control_action receives the view (e.g. a knob or a slider) as argument so you can interpret the value.
+	
+
+returns:: a function expecting a view argument filled in by the framework
 METHOD:: init
 Internal method to initialize the class' data members.
 
 ARGUMENT:: unique_name
-The unique_name (string)
+a unique name (string); this is an ID that must be unique over all sc-midi-controls
 
 ARGUMENT:: gui_name
-The gui_name (string)
+a name (string) that is used in the label, if that label is shown
 
-ARGUMENT:: msg_dispatcher
-The ScMsgDispatcher
+ARGUMENT:: msgDispatcher
+an ScMsgDispatcher, an object that handles all midi communication
 
-returns:: nothing
+returns:: the instance itself
 
-METHOD:: obschan
-The midi channel that this control receives/sends updates from/to.
+METHOD:: extractProperties
+converts internal state of the control into a dictionary for saving/loading the learned or configured controls
 
-returns:: an integer
+ARGUMENT:: props
+an empty IdentityDictionary that can be filled with key/value pairs
 
+returns:: the initialized dictionary
+METHOD:: initFromProperties
+restores internal state of a control from key/values in an IdentityDictionary
+
+ARGUMENT:: props
+an initialized IdentityDictionary from which properties will be read to initialize this control
+
+returns:: the initialized control
 METHOD:: send
-An (internal) method that sends the control's value to the midi device.
+	Method to send a controller value to a midi device.
+	Actually, the send method will first send the values of all controls that are part of the list_of_presend_coupled_controls,
+	then send the value of this control, and finally send the values of all controls that are part of the list_of_postsend_coupled controls. These presend and postsend controls can be used when control changes have to be sent together, e.g. when selecting a patch which first requires sending a bank select followed by a program change.
+	The actual sending uses the msgDispatcher specified during creation of this control which offers sending values to the midi device as a service.
+	
 
 ARGUMENT:: val
-The value to send
+value to send to the midi device
 
-returns:: nothing
+returns:: the instance itself
 
-METHOD:: obstype
-The type of msg that this control listens to (one of \cc, \rpn, \nrpn or \bend)
-
-returns:: a symbol
-
-METHOD:: gui_name
-The name that will appear in the UI if the label is shown
-
-returns:: a string
-
-METHOD:: receivePrivate
-An internal method that is called when a msg is received from the midi device. It is also called if the mute button is active.
-
-ARGUMENT:: dispatcher
-the dispatcher itself is passed as argument
-
-ARGUMENT:: control
-the bidirectional midi control for which the msg is received
-
-ARGUMENT:: src
-the midi src from which a msg is received
-
-ARGUMENT:: chan
-the midi channel on which a msg is received
-
-ARGUMENT:: num
-the controller number (CC), rpn number (RPN), nrpn number (NRPN) or "BEND" (pitch bend)
+METHOD:: sendRaw
+	sendRaw will send this control's value to the midi device using the msgDispatcher specified during creation of this control. sendRaw is an internal function, and you are normally expected to use send instead. sendRaw will not send any presend and postsend control changes (see method send).
+	
 
 ARGUMENT:: val
-the controller value (CC), rpn number (RPN), nrpn value (NRPN) or pitch bend value (pitch bend)
+value to send
 
-returns:: nothing
+returns:: the instance itself
 
-METHOD:: obsspec
-A ControlSpec that contains min and max value for this control. During learning this range is learned. If you use prebinding, you have to specify min/max values yourself.
+METHOD:: sendPreviousValue
+	sendPreviousValue (re)sends the last value of this control to the midi device.
+	Mostly conceived as a helper method for 'send' which calls sendPreviousValue when sending presend/postsend control changes.
+	
 
-returns:: a ControlSpec
-
-METHOD:: receive_handler
-A user-defined method that is invoked when a msg is received from the midi device. Such handler is a function with arguments that are filled in by the framework. The arguments are (dispatcher, control, src, chan, number, value).
-
-returns:: nothing
-
-METHOD:: msg_dispatcher
-The ScMsgDispatcher that provides services to this midi control so it can receive/send updates from/to the midi device.
-
-returns:: an ScMsgDispatcher
-
-METHOD:: prebindCc
-A method that can be used to bind a bidirectional midi control to a CC without requring learning.
-
-ARGUMENT:: chan
-Midi channel
-
-ARGUMENT:: ccnum
-Controller number
-
-ARGUMENT:: minval
-Min value that can be expected
-
-ARGUMENT:: maxval
-Max value that can be expected
-
-ARGUMENT:: src
-Midi src from which to receive updates (may remain nil)
-
-returns:: nothing
-
-METHOD:: receivePublic
-A method that is invoked when the midi device sends an update, and the button is not muted. The end-user of a bidirectional midi control can register their own handler called by receivePublic by calling registerReceiveHandler.
-receivePublic is called by the framework and passes the different arguments as described below:
-
-ARGUMENT:: dispatcher
-The ScMsgDispatcher
-
-ARGUMENT:: control
-A bidirectional midi control
-
-ARGUMENT:: src
-Midi source
-
-ARGUMENT:: chan
-Midi channel
-
-ARGUMENT:: num
-Controller number (CC), RPN number (RPN), NRPN number (NPRN) or "BEND" for pitch bend
-
-ARGUMENT:: val
-Controller value (CC), RPN value (RPN), NRPN value (NRPN) or pitch bend value for pitch bend
-
-returns:: nothing
-
-METHOD:: registerReceiveHandler
-Method to register a custom handler to be executed if a midi device sends updates, and the button is not muted.
-
-ARGUMENT:: handler
-A function expecting arguments (filled in by the framework): (dispatcher, control, src, midi channel, controllernumber, controllervalue)
-
-returns:: nothing
-
-METHOD:: prebindRpn
-A method that can be used to bind a bidirectional midi control to an RPN without requring learning.
-
-ARGUMENT:: chan
-Midi channel
-
-ARGUMENT:: rpnnum
-RPN number
-
-ARGUMENT:: minval
-Minimum expected value
-
-ARGUMENT:: maxval
-Maximum expected value
-
-ARGUMENT:: src
-Midi src
-
-returns:: nothing
-
-METHOD:: prebindNrpn
-A method that can be used to bind a bidirectional midi control to an NRPN without requring learning.
-
-ARGUMENT:: chan
-Midi channel
-
-ARGUMENT:: nrpnnum
-NRPN number
-
-ARGUMENT:: minval
-Minimum expected value
-
-ARGUMENT:: maxval
-Maximum expected value
-
-ARGUMENT:: src
-Midi src
-
-returns:: nothing
+returns:: the instance itself
 
 METHOD:: makeLabel
-Method makes a label for displaying in the UI.
+	Constructs a label for the control to display in the UI based on gui_name, value, control change type.
+	If the control has a value_lookup_table (an array of strings) the value will be used as index in the
+	value_lookup_table to show a symbolic value instead of a numerical value. If the value_lookup_table entry
+	contains a percentage sign, it will be substituted with the numerical value.
+	
 
 ARGUMENT:: val
-Controller value
+value to show in the label
 
-returns:: string containing a label
+returns:: the constructed label (a string)
+METHOD:: prebindCc
+	Convenience method to bind an sc-midi-control to a midi CC change.
+	This is the programmatic way of teaching midi control what messages to listen for/what messages to send.
+	When calling one of the prebind methods, the control is added to a collection of observers in the msgDispatcher
+	using its unqiue name as key.
+	
 
-METHOD:: uniquename
-The unique name for this control
+ARGUMENT:: chan
+midi channel
 
-returns:: a string
+ARGUMENT:: ccnum
+controller number
 
-METHOD:: obssrc
-The midi src that this control is listening to
+ARGUMENT:: minval
+minimum allowed value for the controller value
 
-returns:: A midi src
+ARGUMENT:: maxval
+maximum allowed value for the controller value
 
-METHOD:: obsctrl
-The midi controller number this control is bound to
+ARGUMENT:: src
+midi src (can be left at nil)
 
-returns:: A midi controller number (CC), rpn number (RPN), nrpn number (NRPN) or "BEND" (pitch bend)
+returns:: the instance itself
+
+METHOD:: prebindRpn
+	Convenience method to bind an sc-midi-control to a midi RPN change.
+	This is the programmatic way of teaching midi control what messages to listen for/what messages to send.
+	When calling one of the prebind methods, the control is added to a collection of observers in the msgDispatcher
+	using its unqiue name as key.
+	
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: rpnnum
+controller number
+
+ARGUMENT:: minval
+minimum allowed value for the controller value (default=0)
+
+ARGUMENT:: maxval
+maximum allowed value for the controller value (defaullt=127)
+
+ARGUMENT:: src
+midi src (can be left at nil)
+
+returns:: the instance itself
+
+METHOD:: prebindNrpn
+	Convenience method to bind an sc-midi-control to a midi NRPN change.
+	This is the programmatic way of teaching midi control what messages to listen for/what messages to send.
+	When calling one of the prebind methods, the control is added to a collection of observers in the msgDispatcher
+	using its unqiue name as key.
+	
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: nrpnnum
+controller number
+
+ARGUMENT:: minval
+minimum allowed value for the controller value (default=0)
+
+ARGUMENT:: maxval
+maximum allowed value for the controller value (default=127)
+
+ARGUMENT:: src
+midi src (can be left at nil)
+
+returns:: the instance itself
+
+METHOD:: prebindBend
+	Convenience method to bind an sc-midi-control to a midi pitchbend change.
+	This is the programmatic way of teaching midi control what messages to listen for/what messages to send.
+	When calling one of the prebind methods, the control is added to a collection of observers in the msgDispatcher
+	using its unqiue name as key.
+	
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: minval
+minimum allowed value for the controller value (default=0)
+
+ARGUMENT:: maxval
+maximum allowed value for the controller value (default=16834)
+
+ARGUMENT:: src
+midi src (can be left at nil)
+
+returns:: the instance itself
+
+METHOD:: prebindProgramChange
+	Convenience method to bind an sc-midi-control to a midi program change.
+	This is the programmatic way of teaching midi control what messages to listen for/what messages to send.
+	When calling one of the prebind methods, the control is added to a collection of observers in the msgDispatcher
+	using its unqiue name as key.
+	
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: minval
+minimum allowed value for the controller value (default=0)
+
+ARGUMENT:: maxval
+maximum allowed value for the controller value (default=127)
+
+ARGUMENT:: src
+midi src (can be left at nil)
+
+returns:: the instance itself
+
+METHOD:: prebindLog
+	Convenience method to bind an sc-midi-control to an internal msg type \log.
+	This is typically used in ScMidiControlChangeDumper to log midi events to a textview.
+	This is the programmatic way of teaching midi control what messages to listen for/what messages to send.
+	When calling one of the prebind methods, the control is added to a collection of observers in the msgDispatcher
+	using its unqiue name as key.
+	
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: src
+midi src (can be left at nil)
+
+returns:: the instance itself
+
+METHOD:: registerReceiveHandler
+	Method that allows a control to receive a function that will be triggered
+	whenever the control receives midi updates from the midi device. This can be useful to perform
+	user defined actions.
+	
+
+ARGUMENT:: handler
+	must be a function that takes 6 arguments which will be filled in by the framework, and which the user can use.
+	These 6 arguments are: 1. msgDispatcher, 2. the ScMidiNumericControl itself, 3. the midi src,
+	4. the midi channel, 5. the controller number (for pitch bending this is a string "BEND", for program change this
+	is a string "PROG") and 6. the controller value that is received
+	
+
+returns:: the instance itself
+
+METHOD:: registerCustomControlAction
+	Method that allows a custom control action to be registered. Such custom control action will be executed whenever a user modifies the state of a control (e.g. drags a slider or turns a knob).
+	
+
+returns:: the instance itself
+
+METHOD:: receivePublic
+	A notification that is triggered when a new control change is detected.
+	By default, it will execute the registered receive handler (see registerReceiveHandler) if one was configured.
+	The arguments of receivePublic are filled in by the framework and can be used in the custom receive handler.
+	
+
+ARGUMENT:: dispatcher
+an ScMidiDispatcher
+
+ARGUMENT:: control
+an ScNumericControl (or one of its subclasses ScMidiKnob, ScMidiSlider, ScMidiTextView, etc)
+
+ARGUMENT:: src
+midi src
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: num
+controller number, or one of 'BEND'/'PROG'
+
+ARGUMENT:: val
+controller value
+
+returns:: the result of the custom receive_handler
+METHOD:: receivePrivate
+	A notification that is triggered when a new control change is detected.
+	This notification is also triggered if the control is muted. You should not override it
+	as it is vital to updating the ui state whenever a midi control change is received from the midi device.
+	If you want to do some custom processing when receving a control change, use the receivePublic instead, register a
+	custom receive handler, or (if you insist) override the receivePublic method.
+	
+
+ARGUMENT:: dispatcher
+an ScMidiDispatcher
+
+ARGUMENT:: control
+an ScNumericControl (or one of its subclasses ScMidiKnob, ScMidiSlider, ScMidiTextView, etc)
+
+ARGUMENT:: src
+midi src
+
+ARGUMENT:: chan
+midi channel
+
+ARGUMENT:: num
+controller number, or one of 'BEND'/'PROG'
+
+ARGUMENT:: val
+controller value
+
+returns:: the instance itself
+
+METHOD:: refreshUI
+	method that is called to let controls update their labels - used when there are dependencies between controls (see the bigsky example)
+	
+
+returns:: the instance itself
 
 
 EXAMPLES::
 
 code::
-// ScNumericControl is a base class and not intended to be instantiated directly.
-// See ScMidiKnob, ScMidiSlider or ScMidiTextField for a concrete example
+(
+   // ScNumericControl is normally not used by the end user.
+   // It is a base class for related classes like ScMidiKnob, ScMidiSlider and ScMidiTextField.
+)
+
 ::

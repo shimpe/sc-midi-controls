@@ -1,17 +1,17 @@
-TITLE:: ScMidiKnob
-summary:: a bidirectional midi knob
+TITLE:: ScMidiControlChangeDumper
+summary:: a midi control change log window
 categories:: Midi Utils
-related:: Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScNumericControl, Classes/ScMidiSlider, Classes/ScMidiControlChangeDumper
+related:: Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScNumericControl, Classes/ScMidiSlider, Classes/ScMidiKnob
 
 DESCRIPTION::
-ScMidiKnob models a bidirectional MIDI knob. The knob updates when updates are received from the midi device. If the knob is modified in the UI, the new values are sent to the midi device.
+ScMidiControlChangeDumper models a midi control change log window. The log window is filled up when updates are received from the midi device. ScMidiControlChangeDumper is not bidirectional: it only listens for control changes from the midi device but never sends any.
 
 
 
 CLASSMETHODS::
 
 METHOD:: new
-	New creates a new ScMidiKnob
+	New creates a new ScMidiControlChangeDumper
 	
 
 ARGUMENT:: unique_name
@@ -23,32 +23,20 @@ gui name, a string, needn't be unique over all bidirectional midi controls in yo
 ARGUMENT:: msgDispatcher
 an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication
 
-returns:: a new ScMidiKnob
+returns:: a new ScMidiControlChangeDumper
 
 INSTANCEMETHODS::
 
 METHOD:: muted
-	A boolean to indicate that the knob is muted. When a knob is muted,
-	it doesn't send values to the midi device when the user rotates the knob.
-	The knob will still update its displayed value if control changes are received from the midi device though.
+	On a log window, muted currently has no effect (but it could be changed in the future to stop logging).
 	
 
 returns:: a boolean
-METHOD:: guiknob
-	The Knob() instance that is displayed in the UI. Can be accessed if you want to make your own custom layouts.
+METHOD:: guiedit
+	The TextView() instance that is displayed in the UI. Can be accessed if you want to make your own custom layouts.
 	
 
-returns:: a Knob instance
-METHOD:: guilabel
-	A StaticText instance that is used to display the label.
-	
-
-returns:: a StaticText instance
-METHOD:: guilearnbutton
-	A Button that can be used to activate the built-in midi learning mode for this control.
-	
-
-returns:: a Button
+returns:: a TextView instance
 METHOD:: guimutebutton
 	A Button that can be used to activate the built-in mute mode for this control.
 	
@@ -59,8 +47,15 @@ METHOD:: guiname
 	
 
 returns:: a string
+METHOD:: history
+	history is a list of strings - this is used to only display the last 10 received control changes.
+	It could be made a bit less hardcoded in the future :)
+	
+
+returns:: the instance itself
+
 METHOD:: init
-	Initializes a new ScMidiKnob
+	Initializes a new ScMidiControlChangeDumper
 	
 
 ARGUMENT:: unique_name
@@ -72,27 +67,18 @@ gui name, a string, needn't be unique over all bidirectional midi controls in yo
 ARGUMENT:: msgDispatcher
 an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication
 
-returns:: an initialized ScMidiKnob instance
+returns:: an initialized ScMidiControlChangeDumper instance
 METHOD:: asLayout
 	Convenience method that sets up the guiknob, guilabel, guilearnbutton and guimutebutton and returns them into a VLayout
 	
 
-ARGUMENT:: show_label
-show the label above the midi control (default: true)
-
-ARGUMENT:: show_learn_button
-show the learn button under the midi control (default:true)
-
 ARGUMENT:: show_mute_button
 show the mute button under the midi control (default:true)
-
-ARGUMENT:: learn_label
-text to display on the learn button (default: "Learn")
 
 ARGUMENT:: mute_label
 text to display on the mute button (default: "Mute")
 
-returns:: a VLayout containing a label (optional), a knob, and two buttons (optional)
+returns:: a VLayout containing a text view, and a button (optional)
 METHOD:: receivePrivate
 	Method that is activated every time a control value change is detected that affects this button.
 	receivePrivate is also called when a control is muted so it can still update its state observing the midi device.
@@ -115,12 +101,6 @@ controller number
 
 ARGUMENT:: val
 controller value
-
-returns:: the instance itself
-
-METHOD:: refreshUI
-	method called when all controls in the system need to reevaluate their labels, e.g. because of dependencies between controls
-	
 
 returns:: the instance itself
 

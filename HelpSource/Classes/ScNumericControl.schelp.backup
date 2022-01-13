@@ -1,0 +1,242 @@
+TITLE:: ScNumericControl
+summary:: base class for numeric midi controls
+categories:: Midi Utils
+related:: Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScMidiKnob, Classes/ScMidiSlider
+
+DESCRIPTION::
+Base class for the concrete controls like ScMidiTextField, ScMidiKnob, ScMidiSlider. This class contains everything that is common between different kinds of bidirectional midi controls that hold a single numerical value. Normally you will never instantiate a ScNumericControl directly. It contains no ui controls.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+creates a new ScNumericControl
+
+ARGUMENT:: unique_name
+Every ScNumericControl needs a unique name. This name is configured at the time of instantiating the control (typically in the constructor arguments).
+
+ARGUMENT:: gui_name
+The name that is used in the label, if the label is shown. Different controls can have the same gui_name, but must have a distinct unique_name.
+
+ARGUMENT:: msgDispatcher
+An ScMsgDispatcher that receives and interprets msgs coming from the midi device, and that can send msgs to the midi device.
+
+returns:: an ScMsgDispatcher
+
+
+INSTANCEMETHODS::
+
+METHOD:: prebindBend
+A method that can be used to bind a control to the pitch bender. In that case, no midi learning is needed.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: minval
+Minimum value (normally 0).
+
+ARGUMENT:: maxval
+Maximum value (normally 16383).
+
+ARGUMENT:: src
+Midi src
+
+returns:: nothing
+
+METHOD:: init
+Internal method to initialize the class' data members.
+
+ARGUMENT:: unique_name
+The unique_name (string)
+
+ARGUMENT:: gui_name
+The gui_name (string)
+
+ARGUMENT:: msgDispatcher
+The ScMsgDispatcher
+
+returns:: nothing
+
+METHOD:: obschan
+The midi channel that this control receives/sends updates from/to.
+
+returns:: an integer
+
+METHOD:: send
+An (internal) method that sends the control's value to the midi device.
+
+ARGUMENT:: val
+The value to send
+
+returns:: nothing
+
+METHOD:: obstype
+The type of msg that this control listens to (one of \cc, \rpn, \nrpn or \bend)
+
+returns:: a symbol
+
+METHOD:: gui_name
+The name that will appear in the UI if the label is shown
+
+returns:: a string
+
+METHOD:: receivePrivate
+An internal method that is called when a msg is received from the midi device. It is also called if the mute button is active.
+
+ARGUMENT:: dispatcher
+the dispatcher itself is passed as argument
+
+ARGUMENT:: control
+the bidirectional midi control for which the msg is received
+
+ARGUMENT:: src
+the midi src from which a msg is received
+
+ARGUMENT:: chan
+the midi channel on which a msg is received
+
+ARGUMENT:: num
+the controller number (CC), rpn number (RPN), nrpn number (NRPN) or "BEND" (pitch bend)
+
+ARGUMENT:: val
+the controller value (CC), rpn number (RPN), nrpn value (NRPN) or pitch bend value (pitch bend)
+
+returns:: nothing
+
+METHOD:: obsspec
+A ControlSpec that contains min and max value for this control. During learning this range is learned. If you use prebinding, you have to specify min/max values yourself.
+
+returns:: a ControlSpec
+
+METHOD:: receive_handler
+A user-defined method that is invoked when a msg is received from the midi device. Such handler is a function with arguments that are filled in by the framework. The arguments are (dispatcher, control, src, chan, number, value).
+
+returns:: nothing
+
+METHOD:: msgDispatcher
+The ScMsgDispatcher that provides services to this midi control so it can receive/send updates from/to the midi device.
+
+returns:: an ScMsgDispatcher
+
+METHOD:: prebindCc
+A method that can be used to bind a bidirectional midi control to a CC without requring learning.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: ccnum
+Controller number
+
+ARGUMENT:: minval
+Min value that can be expected
+
+ARGUMENT:: maxval
+Max value that can be expected
+
+ARGUMENT:: src
+Midi src from which to receive updates (may remain nil)
+
+returns:: nothing
+
+METHOD:: receivePublic
+A method that is invoked when the midi device sends an update, and the button is not muted. The end-user of a bidirectional midi control can register their own handler called by receivePublic by calling registerReceiveHandler.
+receivePublic is called by the framework and passes the different arguments as described below:
+
+ARGUMENT:: dispatcher
+The ScMsgDispatcher
+
+ARGUMENT:: control
+A bidirectional midi control
+
+ARGUMENT:: src
+Midi source
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: num
+Controller number (CC), RPN number (RPN), NRPN number (NPRN) or "BEND" for pitch bend
+
+ARGUMENT:: val
+Controller value (CC), RPN value (RPN), NRPN value (NRPN) or pitch bend value for pitch bend
+
+returns:: nothing
+
+METHOD:: registerReceiveHandler
+Method to register a custom handler to be executed if a midi device sends updates, and the button is not muted.
+
+ARGUMENT:: handler
+A function expecting arguments (filled in by the framework): (dispatcher, control, src, midi channel, controllernumber, controllervalue)
+
+returns:: nothing
+
+METHOD:: prebindRpn
+A method that can be used to bind a bidirectional midi control to an RPN without requring learning.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: rpnnum
+RPN number
+
+ARGUMENT:: minval
+Minimum expected value
+
+ARGUMENT:: maxval
+Maximum expected value
+
+ARGUMENT:: src
+Midi src
+
+returns:: nothing
+
+METHOD:: prebindNrpn
+A method that can be used to bind a bidirectional midi control to an NRPN without requring learning.
+
+ARGUMENT:: chan
+Midi channel
+
+ARGUMENT:: nrpnnum
+NRPN number
+
+ARGUMENT:: minval
+Minimum expected value
+
+ARGUMENT:: maxval
+Maximum expected value
+
+ARGUMENT:: src
+Midi src
+
+returns:: nothing
+
+METHOD:: makeLabel
+Method makes a label for displaying in the UI.
+
+ARGUMENT:: val
+Controller value
+
+returns:: string containing a label
+
+METHOD:: uniquename
+The unique name for this control
+
+returns:: a string
+
+METHOD:: obssrc
+The midi src that this control is listening to
+
+returns:: A midi src
+
+METHOD:: obsctrl
+The midi controller number this control is bound to
+
+returns:: A midi controller number (CC), rpn number (RPN), nrpn number (NRPN) or "BEND" (pitch bend)
+
+
+EXAMPLES::
+
+code::
+// ScNumericControl is a base class and not intended to be instantiated directly.
+// See ScMidiKnob, ScMidiSlider or ScMidiTextField for a concrete example
+::
