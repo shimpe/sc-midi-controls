@@ -3,7 +3,7 @@
 title = "ScMidiSlider"
 summary = "a bidirectional midi slider"
 categories = "Midi Utils"
-related = "Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScNumericControl, Classes/ScMidiKnob, Classes/ScControlChangeDumper"
+related = "Classes/ScMsgDispatcher, Classes/ScMidiTextField, Classes/ScNumericControl, Classes/ScMidiKnob, Classes/ScMidiControlChangeDumper"
 description = '''
 ScMidiSlider models a bidirectional MIDI slider. The slider updates when updates are received from the midi device. If the slider is modified in the UI, the new values are sent to the midi device.
 '''
@@ -71,7 +71,6 @@ ScMidiSlider : ScNumericControl {
 	description = '''
 	New creates a new ScMidiSlider
 	'''
-
 	[classmethod.new.args]
 	unique_name = "unique name, a string, must be unique over all bidirectional midi controls in your program"
 	gui_name = "gui name, a string, needn't be unique over all bidirectional midi controls in your program - part of label"
@@ -80,8 +79,8 @@ ScMidiSlider : ScNumericControl {
 	what = "a new ScMidiSlider"
 	*/
 	*new {
-		| unique_name, gui_name, msg_dispatcher |
-		^super.new.init(unique_name, gui_name, msg_dispatcher);
+		| unique_name, gui_name, msgDispatcher |
+		^super.new.init(unique_name, gui_name, msgDispatcher);
 	}
 
 	/*
@@ -98,8 +97,8 @@ ScMidiSlider : ScNumericControl {
 	what = "an initialized ScMidiSlider instance"
 	*/
 	init {
-		| unique_name, gui_name, msg_dispatcher |
-		super.init(unique_name, gui_name, msg_dispatcher);
+		| unique_name, gui_name, msgDispatcher |
+		super.init(unique_name, gui_name, msgDispatcher);
 		this.muted = false;
 		this.guislider = Slider();
 		this.guilabel = StaticText();
@@ -114,11 +113,11 @@ ScMidiSlider : ScNumericControl {
 	Convenience method that sets up the guislider, guilabel, guilearnbutton and guimutebutton and returns them into a VLayout.
 	'''
 	[method.asLayout.args]
-	show_label = show the label above the midi control (default: true)
-	show_learn_button = show the learn button under the midi control (default:true)
-	show_mute_button = show the mute button under the midi control (default:true)
-	learn_label = text to display on the learn button (default: "Learn")
-	mute_label = text to display on the mute button (default: "Mute")
+	show_label = "show the label above the midi control (default: true)"
+	show_learn_button = "show the learn button under the midi control (default:true)"
+	show_mute_button = "show the mute button under the midi control (default:true)"
+	learn_label = "text to display on the learn button (default: \"Learn\")"
+	mute_label = "text to display on the mute button (default: \"Mute\")"
 	[method.asLayout.returns]
 	what = "a VLayout containing a label (optional), a slider, and two buttons (optional)"
 	*/
