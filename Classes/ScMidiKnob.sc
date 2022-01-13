@@ -89,7 +89,6 @@ ScMidiKnob : ScNumericControl {
 	description = '''
 	Initializes a new ScMidiKnob
 	'''
-
 	[method.init.args]
 	unique_name = "unique name, a string, must be unique over all bidirectional midi controls in your program"
 	gui_name = "gui name, a string, needn't be unique over all bidirectional midi controls in your program - part of label"
