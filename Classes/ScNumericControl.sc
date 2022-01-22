@@ -603,6 +603,20 @@ ScNumericControl {
 		// refine in concrete controls
 	}
 
+
+	/*
+	[method.receivePrivateSysex]
+	description = "A notification triggered when sysex is received. Empty base class implementation."
+	[method.receivePrivateSysex.args]
+	dispatcher = "an ScMidiDispatcher"
+	src = "midi src"
+	data = "sysex data as Int8Array"
+	*/
+	receivePrivateSysex {
+		| dispatcher, control, src, data |
+		// implement in concrete controls
+	}
+
 	/*
 	[method.refreshUI]
 	description = '''

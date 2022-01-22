@@ -87,6 +87,16 @@ ScMsgDispatcher {
 	*/
 	var <>programchange_responder;
 
+
+	/*
+	[method.sysex_responder]
+	description = "internel sysex listener"
+	[method.sysex_responder.returns]
+	what = "a sysex responder"
+	*/
+	var <>sysex_responder;
+
+
 	/*
 	[classmethod.new]
 	description = "creates a new ScMsgDispatcher"
@@ -115,6 +125,7 @@ ScMsgDispatcher {
 		this.nrpn_responder = nil;
 		this.bend_responder = nil;
 		this.programchange_responder = nil;
+		this.sysex_responder = nil;
 	}
 
 	/*
@@ -272,6 +283,7 @@ ScMsgDispatcher {
 		this.initNrpnResponder;
 		this.initBendResponder;
 		this.initProgramchangeResponder;
+		this.initSysexResponder;
 	}
 
 	/*
@@ -333,6 +345,22 @@ ScMsgDispatcher {
 					observer.receivePublic(this, observer, src, chan, incomingNum, incomingVal);
 				}
 			};
+		};
+	}
+
+	/*
+	[method.notifyObserversSysex]
+	description = "method to dispatch received sysex to observer"
+	[method.notifyObserversSysex.args]
+	observers = "list of observers to potentially notify"
+	src = "midi src"
+	data = "sysex data as Int8Array"
+	*/
+	notifyObserversSysex {
+		| observers, src, data |
+		observers.do {
+			| observer |
+			observer.receivePrivateSysex(this, observer, src, data);
 		};
 	}
 
@@ -600,6 +628,17 @@ ScMsgDispatcher {
 	}
 
 	/*
+	[method.initSysexResponder]
+	description = "Internal method to set up a sysex responder"
+	*/
+	initSysexResponder {
+		this.sysex_responder = MIDIFunc.sysex({
+			| data, src |
+			this.notifyObserversSysex(this.observers, src, data);
+		});
+	}
+
+	/*
 	[method.refreshUI]
 	description = "Method that can be called to ask all known midi controls to update their label"
 	*/
@@ -620,5 +659,6 @@ ScMsgDispatcher {
 		this.nrpn_responder.remove;
 		this.bend_responder.remove;
 		this.programchange_responder.remove;
+		this.sysex_responder.remove;
 	}
 }

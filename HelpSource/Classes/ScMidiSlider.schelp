@@ -116,13 +116,13 @@ controller number
 ARGUMENT:: val
 controller value
 
-returns:: the instance itself
+returns:: this instance of ScMidiSlider
 
 METHOD:: refreshUI
 	method called when all controls in the system need to reevaluate their labels, e.g. because of dependencies between controls
 	
 
-returns:: the instance itself
+returns:: this instance of ScMidiSlider
 
 
 EXAMPLES::

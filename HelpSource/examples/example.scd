@@ -1,11 +1,11 @@
 (
-var slider1, slider2, knob1, textfield;
+var slider1, slider2, knob1, textfield, log;
 var msgDispatcher;
 
 // create a midi msg dispatcher
 // the msg dispatcher is responsible for learning and sending information to from midi device
 msgDispatcher = ScMsgDispatcher();
-msgDispatcher.connect("Rev2", "Rev2 MIDI 1");
+msgDispatcher.connect("INTEGRA-7", "INTEGRA-7 MIDI 1");
 
 // create some controls, passing in a unique id, a ui label and the midi msg dispatcher as argument
 slider1 = ScMidiSlider("SLIDER 1", "slider", msgDispatcher);
@@ -29,14 +29,22 @@ knob1 = ScMidiKnob("KNOB 1", "knob", msgDispatcher);
 // create a textfield
 textfield = ScMidiTextField("TF", "text", msgDispatcher);
 
+// create a log window
+log = ScMidiControlChangeDumper("LOG", "logger", msgDispatcher, show_sysex:true);
+log.prebindLog;
+
 // make a window,
 w = Window("Midi fader", Rect(100, 500, 400, 400));
-w.layout_(HLayout(
-	slider1.asLayout(show_label:false, show_mute_button:false, learn_label:"L", mute_label:"M"),
-	slider2.asLayout,
-	knob1.asLayout,
-	textfield.asLayout(show_mute_button:false),
-	nil));
+w.layout_(VLayout(
+	HLayout(
+		slider1.asLayout(show_label:false, show_mute_button:false, learn_label:"L", mute_label:"M"),
+		slider2.asLayout,
+		knob1.asLayout,
+		textfield.asLayout(show_mute_button:false),
+		nil),
+	HLayout(
+		log.asLayout
+)));
 w.front;
 
 // clean up when clicking ctrl+. (or cmd+.)

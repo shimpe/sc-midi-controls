@@ -47,6 +47,14 @@ ScMidiControlChangeDumper : ScNumericControl {
 	var <>guiname;
 
 	/*
+	[method.show_sysex]
+	description = "a boolean to indicate if the log window should also display received sysex msgs"
+	[method.show_sysex.returns]
+	what = "a string"
+	*/
+	var <>show_sysex;
+
+	/*
 	[method.history]
 	description = '''
 	history is a list of strings - this is used to only display the last 10 received control changes.
@@ -66,12 +74,13 @@ ScMidiControlChangeDumper : ScNumericControl {
 	unique_name = "unique name, a string, must be unique over all bidirectional midi controls in your program"
 	gui_name = "gui name, a string, needn't be unique over all bidirectional midi controls in your program - part of label"
 	msgDispatcher = "an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication"
+	show_sysex = "a boolean to indicate if the log window should also log received sysex msgs"
 	[classmethod.new.returns]
 	what = "a new ScMidiControlChangeDumper"
 	*/
 	*new {
-		| unique_name, gui_name, msgDispatcher |
-		^super.new.init(unique_name, gui_name, msgDispatcher);
+		| unique_name, gui_name, msgDispatcher, show_sysex |
+		^super.new.init(unique_name, gui_name, msgDispatcher, show_sysex);
 	}
 
 	/*
@@ -84,16 +93,18 @@ ScMidiControlChangeDumper : ScNumericControl {
 	unique_name = "unique name, a string, must be unique over all bidirectional midi controls in your program"
 	gui_name = "gui name, a string, needn't be unique over all bidirectional midi controls in your program - part of label"
 	msgDispatcher = "an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication"
+	show_sysex = "a boolean to indicate if the log window should also log received sysex msgs"
 	[method.init.returns]
 	what = "an initialized ScMidiControlChangeDumper instance"
 	*/
 	init {
-		| unique_name, gui_name, msgDispatcher |
+		| unique_name, gui_name, msgDispatcher, show_sysex |
 		super.init(unique_name, gui_name, msgDispatcher);
 		this.muted = false;
 		this.guiedit = TextView();
 		this.guimutebutton = Button();
 		this.guiname = gui_name;
+		this.show_sysex = show_sysex;
 	}
 
 	/*
@@ -143,6 +154,23 @@ ScMidiControlChangeDumper : ScNumericControl {
 		var newline = "CH:" ++ chan ++ " NUM: " ++ num ++ " VAL: " ++ val;
 		this.history = this.history.add(newline).keep(-10);
 		{this.guiedit.string_(this.history.join("\n"));}.defer;
+	}
+
+
+	/*
+	[method.receiveSysex]
+	description = '''
+	Method that is activated every time a sysex is received.
+	In case of ScMidiControlChangeDumper, the sysex msg is logged only if the show_sysex flag is set to true.
+	'''
+	*/
+	receivePrivateSysex {
+		| dispatcher, control, src, data |
+		if (this.show_sysex) {
+			var newline = data.collect({ | el | el.asHexString(width:2); });
+			this.history = this.history.add(newline).keep(-10);
+			{this.guiedit.string_(this.history.join("\n"));}.defer;
+		}
 	}
 
 }

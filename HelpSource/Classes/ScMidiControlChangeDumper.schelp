@@ -23,6 +23,9 @@ gui name, a string, needn't be unique over all bidirectional midi controls in yo
 ARGUMENT:: msgDispatcher
 an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication
 
+ARGUMENT:: show_sysex
+a boolean to indicate if the log window should also log received sysex msgs
+
 returns:: a new ScMidiControlChangeDumper
 
 INSTANCEMETHODS::
@@ -47,12 +50,16 @@ METHOD:: guiname
 	
 
 returns:: a string
+METHOD:: show_sysex
+a boolean to indicate if the log window should also display received sysex msgs
+
+returns:: a string
 METHOD:: history
 	history is a list of strings - this is used to only display the last 10 received control changes.
 	It could be made a bit less hardcoded in the future :)
 	
 
-returns:: the instance itself
+returns:: this instance of ScMidiControlChangeDumper
 
 METHOD:: init
 	Initializes a new ScMidiControlChangeDumper
@@ -66,6 +73,9 @@ gui name, a string, needn't be unique over all bidirectional midi controls in yo
 
 ARGUMENT:: msgDispatcher
 an ScMsgDispatcher, the object that knows all bidirectional midi controls in your program, and that performs midi communication
+
+ARGUMENT:: show_sysex
+a boolean to indicate if the log window should also log received sysex msgs
 
 returns:: an initialized ScMidiControlChangeDumper instance
 METHOD:: asLayout
@@ -102,7 +112,14 @@ controller number
 ARGUMENT:: val
 controller value
 
-returns:: the instance itself
+returns:: this instance of ScMidiControlChangeDumper
+
+METHOD:: receiveSysex
+	Method that is activated every time a sysex is received.
+	In case of ScMidiControlChangeDumper, the sysex msg is logged only if the show_sysex flag is set to true.
+	
+
+returns:: this instance of ScMidiControlChangeDumper
 
 
 EXAMPLES::

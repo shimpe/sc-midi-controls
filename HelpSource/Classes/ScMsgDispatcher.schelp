@@ -61,6 +61,10 @@ METHOD:: programchange_responder
 internal CCResponder that listens for pitch program changes
 
 returns:: a CCResponder
+METHOD:: sysex_responder
+internel sysex listener
+
+returns:: a sysex responder
 METHOD:: init
 initializes a new ScMsgDispatcher
 
@@ -77,7 +81,7 @@ midi controller number
 ARGUMENT:: value
 midi controller value
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: sendRpn
 sends an RPN message to the midi device. Used by controls of type pn that want to send a value to the midi device.
@@ -91,7 +95,7 @@ midi controller number
 ARGUMENT:: value
 midi controller value
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: sendNrpn
 sends an NRPN message to the midi device. Used by controls of type 
@@ -106,7 +110,7 @@ midi controller number
 ARGUMENT:: value
 midi controller value
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: sendBend
 sends a pitch bend message to the midi device. Used by controls of type end
@@ -117,7 +121,7 @@ midi channel
 ARGUMENT:: value
 bend value (0..16383)
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: sendBank
 sends a bank select msg to the midi device.
@@ -128,7 +132,7 @@ midi channel
 ARGUMENT:: bank
 bank value
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: sendProgramChange
 sends a program change msg to the midi device. Used by controls of type \prog
@@ -139,7 +143,7 @@ midi channel
 ARGUMENT:: patch
 patch value
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: sendBankAndProgramChange
 sends a bank select followed by a program change msg to the midi device.
@@ -153,7 +157,7 @@ bank value
 ARGUMENT:: patch
 patch value
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: connect
 connect initializes the midi system and connects to a specific midi device
@@ -167,7 +171,7 @@ Midi port to which the ScMsgDispatcher is connected. This corresponds to the sec
 ARGUMENT:: midi_out_latency
 Midi out latency. Use 0 if talk to an external synth. Use Server.default.latency if you do use internal synthesis. Defaults to nil, which is translated to Server.default.latency. Use 0 if you talk to external synths.
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: learn
 learn adds a midi control to the list of learning controls; learning controls update their specs as control change (or pitch bend, program change) messages are received
@@ -175,12 +179,12 @@ learn adds a midi control to the list of learning controls; learning controls up
 ARGUMENT:: what
 a midi control that will start learning
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: stopLearning
 stops all learning and transfers the learning controls to the list of known midi controls
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: notifyObservers
 	Internal method that notifies all known midi controls of an incoming control change.
@@ -209,7 +213,21 @@ midi controller number of incoming change (or "BEND" or "PROG"))
 ARGUMENT:: incomingVal
 midi controller value of incoming change
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
+
+METHOD:: notifyObserversSysex
+method to dispatch received sysex to observer
+
+ARGUMENT:: observers
+list of observers to potentially notify
+
+ARGUMENT:: src
+midi src
+
+ARGUMENT:: data
+sysex data as Int8Array
+
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: notifyControlSendPreviousValue
 	Asks control with a given unique name to resend its last received value.
@@ -219,7 +237,7 @@ METHOD:: notifyControlSendPreviousValue
 ARGUMENT:: unique_name
 unique name of the control
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: updateLearningObservers
 Internal method that adapts the learning observer with the incoming control changes. The learning controls are also added to the list of known controls so they can interactive visualize their internal state as they are learning.
@@ -247,7 +265,7 @@ ARGUMENT:: default_max_value
 	0 will force range calibration (i.e. user is supposed to send complete range of possible values during learning).
 	
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: extractObserverProperties
 Internal method. Extracts properties from a midi control that can be used to save the state of the control to file into an IdentityDictionary
@@ -262,7 +280,7 @@ saves the state of all known controls to disk. state is stored per control based
 ARGUMENT:: filename
 file name to save
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: load
 loads the state of all known controls from disk, based on unique name to set loaded info into system state
@@ -270,7 +288,7 @@ loads the state of all known controls from disk, based on unique name to set loa
 ARGUMENT:: filename
 file name to load
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: initCcResponder
 Internal method to set up a CcResponder. By default some controller numbers are ignored (because they are used in RPN or NRPN messages.
@@ -278,41 +296,46 @@ Internal method to set up a CcResponder. By default some controller numbers are 
 ARGUMENT:: ignore_rpn_nrpn
 default true, which means that this CcResponder will not fire if a controller numer used for rpn or nrpn is received
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: initRpnResponder
 Internal method to set up an RPN Responder.
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: initNrpnResponder
 Internal method to set up an NRPN Responder.
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: initBendResponder
 Internal method to set up a pitch bend responder.
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: initProgramchangeResponder
 Internal method to set up an initProgramChangeResponder
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
+
+METHOD:: initSysexResponder
+Internal method to set up a sysex responder
+
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: refreshUI
 Method that can be called to ask all known midi controls to update their label
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 METHOD:: cleanUp
 method that removes all created reponders
 
-returns:: the instance itself
+returns:: this instance of ScMsgDispatcher
 
 
 EXAMPLES::
 
 code::
-(FIXME some example code)
+(FIXME add some example code)
 ::

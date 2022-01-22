@@ -121,7 +121,7 @@ a name (string) that is used in the label, if that label is shown
 ARGUMENT:: msgDispatcher
 an ScMsgDispatcher, an object that handles all midi communication
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: extractProperties
 converts internal state of the control into a dictionary for saving/loading the learned or configured controls
@@ -147,7 +147,7 @@ METHOD:: send
 ARGUMENT:: val
 value to send to the midi device
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: sendRaw
 	sendRaw will send this control's value to the midi device using the msgDispatcher specified during creation of this control. sendRaw is an internal function, and you are normally expected to use send instead. sendRaw will not send any presend and postsend control changes (see method send).
@@ -156,14 +156,14 @@ METHOD:: sendRaw
 ARGUMENT:: val
 value to send
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: sendPreviousValue
 	sendPreviousValue (re)sends the last value of this control to the midi device.
 	Mostly conceived as a helper method for 'send' which calls sendPreviousValue when sending presend/postsend control changes.
 	
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: makeLabel
 	Constructs a label for the control to display in the UI based on gui_name, value, control change type.
@@ -198,7 +198,7 @@ maximum allowed value for the controller value
 ARGUMENT:: src
 midi src (can be left at nil)
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: prebindRpn
 	Convenience method to bind an sc-midi-control to a midi RPN change.
@@ -222,7 +222,7 @@ maximum allowed value for the controller value (defaullt=127)
 ARGUMENT:: src
 midi src (can be left at nil)
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: prebindNrpn
 	Convenience method to bind an sc-midi-control to a midi NRPN change.
@@ -246,7 +246,7 @@ maximum allowed value for the controller value (default=127)
 ARGUMENT:: src
 midi src (can be left at nil)
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: prebindBend
 	Convenience method to bind an sc-midi-control to a midi pitchbend change.
@@ -267,7 +267,7 @@ maximum allowed value for the controller value (default=16834)
 ARGUMENT:: src
 midi src (can be left at nil)
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: prebindProgramChange
 	Convenience method to bind an sc-midi-control to a midi program change.
@@ -288,7 +288,7 @@ maximum allowed value for the controller value (default=127)
 ARGUMENT:: src
 midi src (can be left at nil)
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: prebindLog
 	Convenience method to bind an sc-midi-control to an internal msg type \log.
@@ -304,7 +304,7 @@ midi channel
 ARGUMENT:: src
 midi src (can be left at nil)
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: registerReceiveHandler
 	Method that allows a control to receive a function that will be triggered
@@ -319,13 +319,13 @@ ARGUMENT:: handler
 	is a string "PROG") and 6. the controller value that is received
 	
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: registerCustomControlAction
 	Method that allows a custom control action to be registered. Such custom control action will be executed whenever a user modifies the state of a control (e.g. drags a slider or turns a knob).
 	
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 METHOD:: receivePublic
 	A notification that is triggered when a new control change is detected.
@@ -378,13 +378,27 @@ controller number, or one of 'BEND'/'PROG'
 ARGUMENT:: val
 controller value
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
+
+METHOD:: receivePrivateSysex
+A notification triggered when sysex is received. Empty base class implementation.
+
+ARGUMENT:: dispatcher
+an ScMidiDispatcher
+
+ARGUMENT:: src
+midi src
+
+ARGUMENT:: data
+sysex data as Int8Array
+
+returns:: this instance of ScNumericControl
 
 METHOD:: refreshUI
 	method that is called to let controls update their labels - used when there are dependencies between controls (see the bigsky example)
 	
 
-returns:: the instance itself
+returns:: this instance of ScNumericControl
 
 
 EXAMPLES::
