@@ -490,7 +490,7 @@ ScMsgDispatcher {
 	initCcResponder {
 		| ignore_rpn_nrpn=true |
 		this.cc_responder = CCResponder({ |src, chan, num, val|
-			if ( #[101, 100, 99, 98, 6, 38].includes(num) || ignore_rpn_nrpn.not) {
+			if ( #[101, 100, 99, 98, 6, 38].includes(num).and(ignore_rpn_nrpn)) {
 				// skip
 			} /*else*/ {
 				// if there are any controllers waiting to learn this CC, now is the time
