@@ -28,6 +28,11 @@ ARGUMENT:: msgDispatcher
 	Different controls can have the same gui_name, but must have a distinct unique_name.
 	
 
+ARGUMENT:: bidirectional
+	A boolean that indicates if MIDI will be sent back to the MIDI device. If you set it to false, you can register
+	a custom receive handler to e.g. drive a supercollider synth instead.
+	
+
 returns:: an ScNumericControl
 
 INSTANCEMETHODS::
@@ -40,6 +45,10 @@ METHOD:: gui_name
 encapsulates the gui name for this control. gui name can be shared with other controls and is used to make a label. gui_name is passed to the control in the constructor.
 
 returns:: a gui name (string)
+METHOD:: bidirectional
+boolean to indicate if this control will send midi back to the midi device. Set to false if you only want to receive midi (and e.g. do something with it in a custom receive handler).
+
+returns:: a boolean
 METHOD:: obschan
 encapsulates this control's midi channel. This is initialized during prebinding or during learning.
 
@@ -141,7 +150,7 @@ METHOD:: send
 	Method to send a controller value to a midi device.
 	Actually, the send method will first send the values of all controls that are part of the list_of_presend_coupled_controls,
 	then send the value of this control, and finally send the values of all controls that are part of the list_of_postsend_coupled controls. These presend and postsend controls can be used when control changes have to be sent together, e.g. when selecting a patch which first requires sending a bank select followed by a program change.
-	The actual sending uses the msgDispatcher specified during creation of this control which offers sending values to the midi device as a service.
+	The actual sending uses the msgDispatcher specified during creation of this control which offers sending values to the midi device as a service. No sending will take place if the control's bidirectional member variable is set to false.
 	
 
 ARGUMENT:: val
@@ -385,6 +394,9 @@ A notification triggered when sysex is received. Empty base class implementation
 
 ARGUMENT:: dispatcher
 an ScMidiDispatcher
+
+ARGUMENT:: control
+the control that received the sysex
 
 ARGUMENT:: src
 midi src

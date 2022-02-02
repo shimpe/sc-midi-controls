@@ -25,6 +25,13 @@ ScNumericControl {
 	*/
 	var <>gui_name;
 	/*
+	[method.bidirectional]
+	description = "boolean to indicate if this control will send midi back to the midi device. Set to false if you only want to receive midi (and e.g. do something with it in a custom receive handler)."
+	[method.bidirectional.returns]
+	what = "a boolean"
+	*/
+	var <>bidirectional;
+	/*
 	[method.obschan]
 	description = "encapsulates this control's midi channel. This is initialized during prebinding or during learning."
 	[method.obschan.returns]
@@ -158,7 +165,10 @@ ScNumericControl {
 	The name that is used in the label, if the label is shown.
 	Different controls can have the same gui_name, but must have a distinct unique_name.
 	'''
-
+	bidirectional = '''
+	A boolean that indicates if MIDI will be sent back to the MIDI device. If you set it to false, you can register
+	a custom receive handler to e.g. drive a supercollider synth instead.
+	'''
 	[classmethod.new.returns]
 	what = "an ScNumericControl"
 	*/
@@ -181,6 +191,7 @@ ScNumericControl {
 		| unique_name, gui_name, msgDispatcher |
 		this.uniquename = unique_name;
 		this.gui_name = gui_name;
+		this.bidirectional = true;
 		this.obschan = 0;
 		this.obstype = nil;
 		this.obsspec = nil;
@@ -207,6 +218,7 @@ ScNumericControl {
 	*/
 	extractProperties {
 		| props |
+		props[\bidirectional] = this.bidirectional.copy();
 		props[\obstype] = this.obstype.copy();
 		props[\obssrc] = this.obssrc.copy();
 		props[\obsctrl] = this.obsctrl.copy();
@@ -232,6 +244,7 @@ ScNumericControl {
 	*/
 	initFromProperties {
 		| props |
+		this.bidirectional = props[\bidirectional] ?? {false};
 		this.obstype = props[\obstype].copy();
 		this.obssrc = props[\obssrc].copy();
 		this.obsctrl = props[\obsctrl].copy();
@@ -251,7 +264,7 @@ ScNumericControl {
 	Method to send a controller value to a midi device.
 	Actually, the send method will first send the values of all controls that are part of the list_of_presend_coupled_controls,
 	then send the value of this control, and finally send the values of all controls that are part of the list_of_postsend_coupled controls. These presend and postsend controls can be used when control changes have to be sent together, e.g. when selecting a patch which first requires sending a bank select followed by a program change.
-	The actual sending uses the msgDispatcher specified during creation of this control which offers sending values to the midi device as a service.
+	The actual sending uses the msgDispatcher specified during creation of this control which offers sending values to the midi device as a service. No sending will take place if the control's bidirectional member variable is set to false.
 	'''
 
 	[method.send.args]
@@ -259,17 +272,20 @@ ScNumericControl {
 	*/
 	send {
 		| val |
-		this.list_of_presend_coupled_controls.do {
-			| ctrl |
-			this.msg_dispatcher.notifyControlSendPreviousValue(ctrl);
+
+		if (this.bidirectional) {
+			this.list_of_presend_coupled_controls.do {
+				| ctrl |
+				this.msg_dispatcher.notifyControlSendPreviousValue(ctrl);
+			};
+
+			this.sendRaw(val);
+
+			this.list_of_postsend_coupled_controls.do {
+				| ctrl |
+				this.msg_dispatcher.notifyControlSendPreviousValue(ctrl);
+			}
 		};
-
-		this.sendRaw(val);
-
-		this.list_of_postsend_coupled_controls.do {
-			| ctrl |
-			this.msg_dispatcher.notifyControlSendPreviousValue(ctrl);
-		}
 	}
 
 	/*
@@ -609,6 +625,7 @@ ScNumericControl {
 	description = "A notification triggered when sysex is received. Empty base class implementation."
 	[method.receivePrivateSysex.args]
 	dispatcher = "an ScMidiDispatcher"
+	control = "the control that received the sysex"
 	src = "midi src"
 	data = "sysex data as Int8Array"
 	*/
