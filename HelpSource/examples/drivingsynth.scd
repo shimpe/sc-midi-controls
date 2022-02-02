@@ -1,5 +1,5 @@
-// example to drive a supercollider synth from a midi device
 (
+// example to drive a supercollider synth from a midi device
 s.waitForBoot ({
 	var knob;
 	var msgDispatcher;
